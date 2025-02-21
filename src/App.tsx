@@ -100,10 +100,10 @@ function App() {
   // keydownイベントでページ送り
   useEffect(() => {
     const handleKeydown = (event: KeyboardEvent) => {
-      if (event.key === "ArrowLeft" || event.key === "ArrowDown") {
+      if (event.key === "ArrowLeft" || event.key === "ArrowDown" || (event.key === " " && !event.shiftKey)) {
         event.preventDefault();
         gotoNextSlide();
-      } else if (event.key === "ArrowRight" || event.key === "ArrowUp") {
+      } else if (event.key === "ArrowRight" || event.key === "ArrowUp" || (event.key === " " && event.shiftKey)) {
         event.preventDefault();
         gotoNextSlide(false);
       }

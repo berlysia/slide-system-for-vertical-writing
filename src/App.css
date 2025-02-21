@@ -1,0 +1,83 @@
+.slides-container {
+  container-name: --slide-container;
+  container-type: size;
+
+  width: 100dvw;
+  height: calc(max(90dvh, 100dvw * 9 / 16) + 0px);
+
+  position: relative;
+
+  overflow: hidden;
+
+  display: block flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+
+  border: 1px solid #ccc;
+  background-color: #eee;
+}
+
+@property --slide-writing-mode {
+  syntax: "horizontal-tb | vertical-rl | vertical-lr | sideways-rl | sideways-lr";
+  inherits: true;
+  initial-value: horizontal-tb;
+}
+.wm-toggle {
+  @container style(--slide-writing-mode: vertical-rl) {
+    writing-mode: horizontal-tb !important;
+  }
+  @container style(--slide-writing-mode: horizontal-tb) or style(--slide-writing-mode: unset) {
+    writing-mode: vertical-rl;
+  }
+}
+
+.slides {
+  /* コンテナーの中を最大に占める16/9の寸法 */
+  width: 100cqw;
+  height: 100cqh;
+  max-width: calc(100cqh * 16 / 9);
+  max-height: calc(100cqw * 9 / 16);
+
+  scroll-snap-type: both mandatory;
+  writing-mode: var(--slide-writing-mode);
+
+  overflow: hidden;
+
+  @container style(--slide-writing-mode: vertical-rl) or style(--slide-writing-mode: vertical-lr) or style(--slide-writing-mode: sideways-rl) or style(--slide-writing-mode: sideways-lr) {
+    overflow-x: scroll;
+  }
+  @container style(--slide-writing-mode: horizontal-tb) or style(--slide-writing-mode: unset) {
+    overflow-y: scroll;
+  }
+}
+
+/* 各スライドのスタイル */
+.slide {
+  width: 100cqw;
+  height: 100cqh;
+  max-width: calc(100cqh * 16 / 9);
+  max-height: calc(100cqw * 9 / 16);
+
+  container-name: --slide;
+  container-type: size;
+
+  background-color: white;
+
+  /* display: flex;
+  justify-content: center;
+  align-items: center; */
+
+  scroll-snap-align: center;
+
+  page-break-after: always;
+
+  overflow: hidden;
+}
+
+.controls {
+  position: fixed;
+
+  left: 40px;
+  bottom: 40px;
+}

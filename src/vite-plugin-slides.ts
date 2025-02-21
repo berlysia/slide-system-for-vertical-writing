@@ -1,7 +1,6 @@
 import { Plugin, ViteDevServer } from 'vite';
 import * as fs from 'node:fs';
 import * as path from 'node:path';
-import * as url from 'node:url';
 import { mkdirSync, copyFileSync, readdirSync } from 'node:fs';
 import prompts from 'prompts';
 
@@ -82,7 +81,7 @@ export default async function slidesPlugin(options: SlidesPluginOptions = {}): P
       const currentFilePath = import.meta.filename;
       const currentDir = path.dirname(currentFilePath);
       const sourceImagesDir = path.resolve(currentDir, `../${config.slidesDir}/${config.collection}/images`);
-      const targetImagesDir = path.resolve(currentDir, `../public/slides/${config.collection}/images`);
+      const targetImagesDir = path.resolve(currentDir, `../public/${config.slidesDir}/${config.collection}/images`);
 
       if (fs.existsSync(sourceImagesDir)) {
         // Create target directory if it doesn't exist

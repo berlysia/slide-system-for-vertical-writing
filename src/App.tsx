@@ -6,11 +6,7 @@ import remarkRehype from "remark-rehype";
 import rehypeStringify from "rehype-stringify";
 import { VFile } from "vfile";
 
-const markdownFiles = import.meta.glob("./slides.md", {
-  as: "raw",
-  eager: true,
-});
-const markdown = markdownFiles["./slides.md"];
+import slidesContent from 'virtual:slides';
 
 async function processMarkdown(markdown: string) {
   return await unified()
@@ -29,7 +25,7 @@ function App() {
 
   useEffect(() => {
     (async () => {
-      const content = markdown;
+      const content = slidesContent;
       const slideContents = content.split(/^\s*(?:---|\*\*\*|___)\s*$/m);
 
       const slideElements = await Promise.all(

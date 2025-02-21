@@ -23,6 +23,7 @@
   inherits: true;
   initial-value: horizontal-tb;
 }
+
 .wm-toggle {
   @container style(--slide-writing-mode: vertical-rl) {
     writing-mode: horizontal-tb !important;

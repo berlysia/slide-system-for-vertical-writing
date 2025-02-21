@@ -488,3 +488,238 @@ Flexboxのもとでは、
 </div >
 
 </div>
+
+---
+
+<div class="wrapper center">
+
+# コンテナスタイルクエリ
+
+</div>
+
+---
+
+<div class="wrapper">
+
+# 親の顔より見た「〇〇」
+
+</div>
+
+---
+
+<div class="wrapper">
+
+# 親の顔より見た「`writing-mode`」
+
+もっと親の顔見て
+
+もっと親の `writing-mode` 見て
+
+</div>
+
+---
+
+<div class="wrapper">
+
+# 親の `writing-mode` を見たいとき
+
+- 方向が伴うものほとんどすべて
+  - レイアウト系
+  - overflow
+  - linear-gradient
+  - transform
+- フォント指定
+
+</div>
+
+---
+
+<div class="wrapper header-and-content">
+
+<img src="/public/CSS Logical Properties and Values.png">
+
+</div>
+
+---
+
+<div class="wrapper header-and-content">
+
+## フォントの場合
+
+<div class="wm-horizontal" style="flex: 1; display: flex; justify-content: center; align-items: center; flex-direction: column;">
+
+<img src="/public/font.png" style="height: 40cqh;">
+
+<span style="font-size: 0.8em">
+
+[縦書きHTMLにおける文字の向きはどのように定まるか](https://blog.nnn.dev/entry/2022/07/01/180000)
+
+ </span>
+
+</div>
+
+</div>
+
+---
+
+<div class="wrapper">
+
+## overflow
+
+仕様がWD、実装がない
+
+- `overflow-inline`
+- `overflow-block`
+
+## linear-gradient
+
+- `to left` `to right` みたいなやつ
+
+## transform
+
+- そもそも話がない
+
+</div>
+
+---
+
+<div class="wrapper header-and-content">
+
+# 判定したい
+
+<div class="wm-horizontal" style="flex: 1; display: flex; justify-content: center; align-items: center;">
+
+```
+(writing-modeがvertical-rlだったら) {
+  overflow-x: scroll;
+  font-family: "Noto Sans JP";
+}
+```
+
+</div>
+
+</div>
+
+---
+
+<div class="wrapper header-and-content">
+
+# Container Style Query!!!
+
+<div class="wm-horizontal" style="flex: 1; display: flex; justify-content: center; align-items: center;">
+
+```
+@container style(writing-mode: vertical-rl) {
+  overflow-x: scroll;
+  font-family: "Noto Sans JP";
+}
+```
+
+</div>
+</div>
+
+---
+
+<div class="wrapper">
+
+# Container Query
+
+- Container Size Query
+- Container Style Query
+
+</div>
+
+---
+
+<div class="wrapper header-and-content">
+
+# Container Size Query
+
+<div class="wm-horizontal" style="flex: 1; display: flex; justify-content: center; align-items: center;">
+
+```
+.myclass {
+  container-type: size;
+  container-name: --my-container-name;
+  /*
+  HTML側に逃すこともできそうね
+  container-name: attr(id type(<custom-ident>), none);
+  */
+}
+/* 〜 */
+@container (max-width: 640px) {
+  background-color: red;
+}
+```
+
+</div>
+</div>
+
+---
+
+<div class="wrapper header-and-content">
+
+# Container Size Query
+
+`container-type` プロパティがあるところ 「だけ」 がコンテナサイズクエリできるようになる
+
+CSS Containmentの機能でレイアウト的に制約がかかる
+
+# Container Style Query
+
+デフォルトで全ての空でない要素がスタイルクエリコンテナになる。
+
+</div>
+</div>
+
+---
+
+<div class="wrapper header-and-content">
+
+# 構文
+
+<div class="wm-horizontal" style="flex: 1; display: flex; justify-content: center; align-items: center;">
+
+```
+/* サイズクエリ */
+@container (max-width: 640px) {
+  background-color: red;
+}
+/* スタイルクエリ */
+@container style(writing-mode: vertical-rl) {
+  background-color: blue;
+}
+/* 混合が許される */
+@container (max-width: 640px)
+    and style(writing-mode: vertical-rl) {
+  background-color: blue;
+}
+```
+
+</div>
+</div>
+
+---
+
+<div class="wrapper header-and-content">
+
+# で。動くんですか？
+
+<!-- センタリング -->
+<div style="flex: 1; display: flex; flex-direction: column; justify-content: center; align-items: center;">
+
+まだ動きません
+
+しかし、カスタムプロパティならば
+
+</div >
+
+</div>
+
+---
+
+<div class="wrapper center">
+
+# Go to editor……
+
+</div>

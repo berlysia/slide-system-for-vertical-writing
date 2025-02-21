@@ -65,13 +65,7 @@
 
   background-color: white;
 
-  /* display: flex;
-  justify-content: center;
-  align-items: center; */
-
   scroll-snap-align: center;
-
-  page-break-after: always;
 
   overflow: hidden;
 }
@@ -85,9 +79,10 @@
 
 
 
-/* @media print { */
+@media print {
   @page {
     size: 1920px 1080px;
+    margin: 0;
   }
 
   html, body, #root {
@@ -101,6 +96,8 @@
 
   .slides-container {
     all: unset;
+    margin: 0;
+    padding: 0;
   }
 
   .controls {
@@ -108,28 +105,25 @@
   }
 
   .slides {
-    overflow: auto;
+    margin: 0;
+    padding: 0;
+    overflow: visible;
     width: unset;
     height: unset;
     max-width: unset;
     max-height: unset;
     writing-mode: unset;
-    scroll-snap-type: unset;
   }
   
   .slide {
-    /* 1080p */
-    size: 1920px 1080px;
-    container-name: unset;
-    container-type: unset;
     writing-mode: var(--slide-writing-mode);
     display: block;
     position: relative;
     box-sizing: border-box;
     margin: 0;
+    padding: 0;
     background: white;
-    scroll-snap-align: unset;
-    page-break-after: always;
+    page-break-after: avoid;
     page-break-inside: avoid;
   }
-/* } */
+}

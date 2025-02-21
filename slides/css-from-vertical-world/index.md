@@ -1,22 +1,3 @@
-<!--
-
-- どういう話をするか
-- スクロールとオーバーフロー revisiting
-  - スクロールがどうして起きるか：オーバーフローしてるから
-  - overflowプロパティとスクローリングエレメント
-  - オーバーフローを起こす方向はどう決まるか
-- コンテナスタイルクエリ
-  - 「親の顔より見た○○」→「もっと親の○○見て」
-  - 親のwriting-modeを知りたい
-    - 正確には親から継承されてくる自分のwriting-modeを知りたい
-      - レイアウト系……logical properties
-      - overflow……仕様はあるけど実装がまだ
-      - linear-gradient……仕様がまだ、議論はある
-      - transform……仕様も議論もない
-      - フォント指定
-
--->
-
 <div class="wrapper center">
 
 # 縦から目線の<span style="text-orientation: upright;">ＣＳＳ</span>
@@ -536,7 +517,7 @@ Flexboxのもとでは、
 
 <div class="wrapper header-and-content">
 
-<img src="/CSS Logical Properties and Values.png">
+<img src="@slide/CSS Logical Properties and Values.png">
 
 </div>
 
@@ -548,7 +529,7 @@ Flexboxのもとでは、
 
 <div class="wm-horizontal" style="flex: 1; display: flex; justify-content: center; align-items: center; flex-direction: column;">
 
-<img src="/font.png" style="height: 40cqh;">
+<img src="@slide/font.png" style="height: 40cqh;">
 
 <span style="font-size: 0.8em">
 

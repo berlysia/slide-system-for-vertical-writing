@@ -3,7 +3,7 @@ import react from '@vitejs/plugin-react-swc'
 import slidesPlugin from './src/vite-plugin-slides'
 
 // https://vite.dev/config/
-export default defineConfig({
+export default defineConfig(async () => ({
   plugins: [
     react(),
     // You can configure the slides plugin with options:
@@ -11,10 +11,10 @@ export default defineConfig({
     //   slidesDir: 'slides',          // Directory containing slides
     //   collection: 'my-presentation' // Name of the slides collection
     // })
-    slidesPlugin()
+    await slidesPlugin()
   ],
   optimizeDeps: {
     // Add virtual module to optimization
     include: ['virtual:slides']
   }
-})
+}))

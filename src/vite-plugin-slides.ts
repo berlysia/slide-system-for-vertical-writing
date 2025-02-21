@@ -3,6 +3,7 @@ import * as fs from 'node:fs';
 import * as path from 'node:path';
 import * as url from 'node:url';
 import { mkdirSync, copyFileSync, readdirSync } from 'node:fs';
+import prompts from 'prompts';
 
 export interface SlidesPluginOptions {
   /** Directory containing the slides, relative to project root */
@@ -13,11 +14,46 @@ export interface SlidesPluginOptions {
 
 const defaultOptions: Required<SlidesPluginOptions> = {
   slidesDir: 'slides',
-  collection: 'css-from-vertical-world'
+  collection: ''
 };
 
-export default function slidesPlugin(options: SlidesPluginOptions = {}): Plugin {
-  const config = { ...defaultOptions, ...options };
+async function selectSlideCollection(slidesDir: string): Promise<string> {
+  const currentFilePath = import.meta.filename;
+  const currentDir = path.dirname(currentFilePath);
+  const slidesPath = path.resolve(currentDir, `../${slidesDir}`);
+  
+  if (!fs.existsSync(slidesPath)) {
+    throw new Error(`Slides directory not found: ${slidesPath}`);
+  }
+
+  const collections = readdirSync(slidesPath, { withFileTypes: true })
+    .filter(dirent => dirent.isDirectory())
+    .map(dirent => dirent.name);
+
+  if (collections.length === 0) {
+    throw new Error(`No slide collections found in ${slidesPath}`);
+  }
+
+  const response = await prompts({
+    type: 'select',
+    name: 'collection',
+    message: 'Select a slide collection:',
+    choices: collections.map(name => ({ title: name, value: name }))
+  });
+
+  if (!response.collection) {
+    throw new Error('No slide collection selected');
+  }
+
+  return response.collection;
+}
+
+export default async function slidesPlugin(options: SlidesPluginOptions = {}): Promise<Plugin> {
+  const mergedOptions = { ...defaultOptions, ...options };
+  const config = {
+    ...mergedOptions,
+    collection: mergedOptions.collection || await selectSlideCollection(mergedOptions.slidesDir)
+  };
   return {
     name: 'vite-plugin-slides',
     resolveId(id: string) {

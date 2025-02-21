@@ -9,7 +9,7 @@
 
   overflow: hidden;
 
-  display: block flex;
+  display: flex;
   flex-direction: column;
   justify-content: center;
   align-items: center;
@@ -82,3 +82,54 @@
   left: 40px;
   bottom: 40px;
 }
+
+
+
+/* @media print { */
+  @page {
+    size: 1920px 1080px;
+  }
+
+  html, body, #root {
+    overflow: visible !important;
+  }
+
+  body {
+    margin: 0;
+    padding: 0;
+  }
+
+  .slides-container {
+    all: unset;
+  }
+
+  .controls {
+    display: none;
+  }
+
+  .slides {
+    overflow: auto;
+    width: unset;
+    height: unset;
+    max-width: unset;
+    max-height: unset;
+    writing-mode: unset;
+    scroll-snap-type: unset;
+  }
+  
+  .slide {
+    /* 1080p */
+    size: 1920px 1080px;
+    container-name: unset;
+    container-type: unset;
+    writing-mode: var(--slide-writing-mode);
+    display: block;
+    position: relative;
+    box-sizing: border-box;
+    margin: 0;
+    background: white;
+    scroll-snap-align: unset;
+    page-break-after: always;
+    page-break-inside: avoid;
+  }
+/* } */

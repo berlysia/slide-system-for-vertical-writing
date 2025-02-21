@@ -536,7 +536,7 @@ Flexboxのもとでは、
 
 <div class="wrapper header-and-content">
 
-<img src="/public/CSS Logical Properties and Values.png">
+<img src="/CSS Logical Properties and Values.png">
 
 </div>
 
@@ -548,7 +548,7 @@ Flexboxのもとでは、
 
 <div class="wm-horizontal" style="flex: 1; display: flex; justify-content: center; align-items: center; flex-direction: column;">
 
-<img src="/public/font.png" style="height: 40cqh;">
+<img src="/font.png" style="height: 40cqh;">
 
 <span style="font-size: 0.8em">
 

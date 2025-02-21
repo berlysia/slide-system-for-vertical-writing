@@ -35,8 +35,8 @@
 
 1. 縦書きで余計に意識させられる要素
 
+- 内在的サイズ
 - 整形コンテキスト
-- オーバーフローとスクロール
 
 2. コンテナスタイルクエリ
 
@@ -251,6 +251,93 @@
 
 ---
 
+<div class="wrapper center">
+
+# 内在的サイズ
+
+Intrinsic size
+
+要素の内容で決まる良い感じの寸法。
+
+</div>
+
+---
+
+<div class="wrapper">
+
+`min-height`, `min-width` は初期値が `auto` である。
+
+Flexboxのもとでは、  
+`overflow: visible` のとき、  
+フレックスアイテムの内在的サイズが考慮される。
+
+`min-*` が `auto` なので、成り行きでフレックスコンテナーをはみだす結果になる。
+
+`overflow` を `visible` 以外にすると、  
+フレックスアイテムが縮小できるようになり、おさまる。
+
+</div>
+
+---
+
+<div class="wrapper header-and-content">
+
+# 横書きの中に縦書きの領域を作る：横書き
+
+<div style="flex: 1; container-type: size;">
+
+<div style="writing-mode: horizontal-tb; display: block flex; flex-direction: column; height: 100cqh; width: 100cqw;">
+  <div style="border: 8px solid blue;">
+    何かヘッダー
+  </div>
+  <div style="flex: 1; border: 8px solid orange;">
+
+ここに長めのコンテンツ。ここに長めのコンテンツ。ここに長めのコンテンツ。ここに長めのコンテンツ。ここに長めのコンテンツ。ここに長めのコンテンツ。ここに長めのコンテンツ。ここに長めのコンテンツ。ここに長めのコンテンツ。ここに長めのコンテンツ。ここに長めのコンテンツ。ここに長めのコンテンツ。ここに長めのコンテンツ。ここに長めのコンテンツ。ここに長めのコンテンツ。ここに長めのコンテンツ。ここに長めのコンテンツ。ここに長めのコンテンツ。ここに長めのコンテンツ。ここに長めのコンテンツ。ここに長めのコンテンツ。ここに長めのコンテンツ。ここに長めのコンテンツ。ここに長めのコンテンツ。ここに長めのコンテンツ。ここに長めのコンテンツ。ここに長めのコンテンツ。ここに長めのコンテンツ。ここに長めのコンテンツ。ここに長めのコンテンツ。ここに長めのコンテンツ。ここに長めのコンテンツ。ここに長めのコンテンツ。ここに長めのコンテンツ。ここに長めのコンテンツ。ここに長めのコンテンツ。ここに長めのコンテンツ。ここに長めのコンテンツ。ここに長めのコンテンツ。ここに長めのコンテンツ。ここに長めのコンテンツ。
+
+  </div>
+  <div style="border: 8px solid blue;">
+    何か後続の中身たち
+  </div>
+  <div style="border: 8px solid blue;">
+    何か後続の中身たち
+  </div>
+</div>
+
+</div>
+
+</div>
+
+---
+
+<div class="wrapper header-and-content">
+
+# 横書きの中に縦書きの領域を作る：横書き+overflow
+
+<div style="flex: 1; container-type: size;">
+
+<div style="writing-mode: horizontal-tb; display: block flex; flex-direction: column; height: 100cqh; width: 100cqw;">
+  <div style="border: 8px solid blue;">
+    何かヘッダー
+  </div>
+  <div style="flex: 1; border: 8px solid orange; overflow: auto;">
+
+ここに長めのコンテンツ。ここに長めのコンテンツ。ここに長めのコンテンツ。ここに長めのコンテンツ。ここに長めのコンテンツ。ここに長めのコンテンツ。ここに長めのコンテンツ。ここに長めのコンテンツ。ここに長めのコンテンツ。ここに長めのコンテンツ。ここに長めのコンテンツ。ここに長めのコンテンツ。ここに長めのコンテンツ。ここに長めのコンテンツ。ここに長めのコンテンツ。ここに長めのコンテンツ。ここに長めのコンテンツ。ここに長めのコンテンツ。ここに長めのコンテンツ。ここに長めのコンテンツ。ここに長めのコンテンツ。ここに長めのコンテンツ。ここに長めのコンテンツ。ここに長めのコンテンツ。ここに長めのコンテンツ。ここに長めのコンテンツ。ここに長めのコンテンツ。ここに長めのコンテンツ。ここに長めのコンテンツ。ここに長めのコンテンツ。ここに長めのコンテンツ。ここに長めのコンテンツ。ここに長めのコンテンツ。ここに長めのコンテンツ。ここに長めのコンテンツ。ここに長めのコンテンツ。ここに長めのコンテンツ。ここに長めのコンテンツ。ここに長めのコンテンツ。ここに長めのコンテンツ。ここに長めのコンテンツ。
+
+  </div>
+  <div style="border: 8px solid blue;">
+    何か後続の中身たち
+  </div>
+  <div style="border: 8px solid blue;">
+    何か後続の中身たち
+  </div>
+</div>
+
+</div>
+
+</div>
+
+---
+
 <div class="wrapper">
 
 # フローレイアウト
@@ -275,6 +362,7 @@
 
 ---
 
+<!--
 <div class="wrapper">
 
 - ブロック整形コンテキスト
@@ -285,7 +373,7 @@
 
 </div>
 
----
+--- -->
 
 <!-- <div class="wrapper center">
 
@@ -301,22 +389,102 @@
 
 # 寸法の決まり方
 
-<div style="border: 8px solid blue; margin: 12px; padding: 12px; block-size: max-content">
+<div style="border: 8px solid blue; margin: 12px; padding: 12px;">
 
 フローレイアウト中のブロックボックスは、 `padding` や `margin` を考慮したうえで、インライン方向に広がる。
 
-ブロック方向は内在的サイズを考慮して、自然に拡張する。
+ブロック方向はIntrinsic sizeを考慮したAutomatic block sizeになる[🔗](https://www.w3.org/TR/。css-sizing-3/)。
 
-この挙動はブロック整形コンテキストが司っている。
+この挙動はブロック整形コンテキストが定めている。
 
 </div>
 
 <div style="border: 8px solid blue; margin: 12px; padding: 12px;">
-  
+
 中身少ない版
 
 </div>
 
 ※縦横切り替えてみよう
+
+</div>
+
+---
+
+<div class="wrapper">
+
+# ブロックの配置
+
+<div style="border: 8px solid blue; margin: 12px; padding: 12px;">
+
+<div style="border: 8px solid orange; margin: 12px; padding: 12px; inline-size: 33%;">
+  ブロックはinline-start側に寄せて配置される
+</div>
+
+<div style="border: 8px solid orange; margin: 12px; padding: 12px; inline-size: 80%;">
+  ブロックはinline-start側に寄せて配置される
+</div>
+
+<div style="border: 8px solid orange; margin: 12px; padding: 12px;" class="wm-toggle">
+  縦横混ぜるとどうなる？
+</div>
+
+この挙動はブロック整形コンテキストが定めている。
+
+</div>
+
+※縦横切り替えてみよう
+
+</div>
+
+---
+
+<div class="wrapper">
+
+# だからこうなる
+
+<div style="border: 8px solid blue;" class="wm-toggle">
+
+ここに長めのコンテンツ。ここに長めのコンテンツ。ここに長めのコンテンツ。ここに長めのコンテンツ。ここに長めのコンテンツ。ここに長めのコンテンツ。ここに長めのコンテンツ。ここに長めのコンテンツ。ここに長めのコンテンツ。ここに長めのコンテンツ。ここに長めのコンテンツ。ここに長めのコンテンツ。ここに長めのコンテンツ。ここに長めのコンテンツ。ここに長めのコンテンツ。ここに長めのコンテンツ。ここに長めのコンテンツ。ここに長めのコンテンツ。ここに長めのコンテンツ。ここに長めのコンテンツ。ここに長めのコンテンツ。ここに長めのコンテンツ。ここに長めのコンテンツ。ここに長めのコンテンツ。ここに長めのコンテンツ。ここに長めのコンテンツ。ここに長めのコンテンツ。ここに長めのコンテンツ。ここに長めのコンテンツ。ここに長めのコンテンツ。ここに長めのコンテンツ。ここに長めのコンテンツ。ここに長めのコンテンツ。ここに長めのコンテンツ。ここに長めのコンテンツ。ここに長めのコンテンツ。ここに長めのコンテンツ。ここに長めのコンテンツ。ここに長めのコンテンツ。ここに長めのコンテンツ。ここに長めのコンテンツ。
+
+</div>
+
+---
+
+<div class="wrapper header-and-content">
+
+# おすすめ:FlexやGridで調停
+
+<div style="flex: 1; container-type: size; position: relative;">
+
+<div style="writing-mode: horizontal-tb; display: block flex; flex-direction: column; height: 100cqh; width: 100cqw;">
+  <div style="border: 8px solid blue;">
+    何かヘッダー
+  </div>
+  <div style="writing-mode: vertical-rl; flex: 1; border: 8px solid orange; overflow: auto;">
+  ここに長めのコンテンツ。ここに長めのコンテンツ。ここに長めのコンテンツ。ここに長めのコンテンツ。ここに長めのコンテンツ。ここに長めのコンテンツ。ここに長めのコンテンツ。ここに長めのコンテンツ。ここに長めのコンテンツ。ここに長めのコンテンツ。ここに長めのコンテンツ。ここに長めのコンテンツ。ここに長めのコンテンツ。ここに長めのコンテンツ。ここに長めのコンテンツ。ここに長めのコンテンツ。ここに長めのコンテンツ。ここに長めのコンテンツ。ここに長めのコンテンツ。ここに長めのコンテンツ。ここに長めのコンテンツ。ここに長めのコンテンツ。ここに長めのコンテンツ。ここに長めのコンテンツ。ここに長めのコンテンツ。ここに長めのコンテンツ。ここに長めのコンテンツ。ここに長めのコンテンツ。ここに長めのコンテンツ。ここに長めのコンテンツ。ここに長めのコンテンツ。ここに長めのコンテンツ。ここに長めのコンテンツ。ここに長めのコンテンツ。ここに長めのコンテンツ。ここに長めのコンテンツ。
+  </div>
+  <div style="border: 8px solid blue;">
+    何か後続の中身たち
+  </div>
+  <div style="border: 8px solid blue;">
+    何か後続の中身たち
+  </div>
+</div>
+
+</div>
+
+</div>
+
+---
+
+<div class="wrapper header-and-content">
+
+# どうしても<br />文章ページでやりたい
+
+<!-- センタリング -->
+<div style="flex: 1; display: flex; justify-content: center; align-items: center;">
+頑張ってください
+</div >
 
 </div>

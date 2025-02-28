@@ -68,7 +68,9 @@
     margin: 0;
   }
 
-  html, body, #root {
+  html,
+  body,
+  #root {
     overflow: visible !important;
   }
 
@@ -97,7 +99,7 @@
     max-height: unset;
     writing-mode: unset;
   }
-  
+
   .slide {
     writing-mode: var(--slide-writing-mode);
     display: block;

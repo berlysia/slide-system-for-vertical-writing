@@ -5,7 +5,7 @@ import remarkParse from "remark-parse";
 import remarkRehype from "remark-rehype";
 import rehypeStringify from "rehype-stringify";
 
-import slidesContent from 'virtual:slides.jsx';
+import slidesContent from "virtual:slides.jsx";
 
 async function processMarkdown(markdown: string) {
   return await unified()
@@ -28,7 +28,7 @@ function App() {
 
       const slideElements = await Promise.all(
         contents.map(async (content, index) => {
-          if (typeof content === 'string') {
+          if (typeof content === "string") {
             const processed = await processMarkdown(content);
             return (
               <div className="slide" id={`page-${index}`} key={index}>
@@ -107,10 +107,18 @@ function App() {
   // keydownイベントでページ送り
   useEffect(() => {
     const handleKeydown = (event: KeyboardEvent) => {
-      if (event.key === "ArrowLeft" || event.key === "ArrowDown" || (event.key === " " && !event.shiftKey)) {
+      if (
+        event.key === "ArrowLeft" ||
+        event.key === "ArrowDown" ||
+        (event.key === " " && !event.shiftKey)
+      ) {
         event.preventDefault();
         gotoNextSlide();
-      } else if (event.key === "ArrowRight" || event.key === "ArrowUp" || (event.key === " " && event.shiftKey)) {
+      } else if (
+        event.key === "ArrowRight" ||
+        event.key === "ArrowUp" ||
+        (event.key === " " && event.shiftKey)
+      ) {
         event.preventDefault();
         gotoNextSlide(false);
       }

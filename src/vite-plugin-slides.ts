@@ -1,9 +1,9 @@
-import { Plugin, ViteDevServer } from 'vite';
-import * as fs from 'node:fs';
-import * as path from 'node:path';
-import { mkdirSync, copyFileSync, readdirSync } from 'node:fs';
-import prompts from 'prompts';
-import { compile } from '@mdx-js/mdx';
+import { Plugin, ViteDevServer } from "vite";
+import * as fs from "node:fs";
+import * as path from "node:path";
+import { mkdirSync, copyFileSync, readdirSync } from "node:fs";
+import prompts from "prompts";
+import { compile } from "@mdx-js/mdx";
 
 export interface SlidesPluginOptions {
   /** Directory containing the slides, relative to project root */
@@ -13,69 +13,74 @@ export interface SlidesPluginOptions {
 }
 
 const defaultOptions: Required<SlidesPluginOptions> = {
-  slidesDir: 'slides',
-  collection: ''
+  slidesDir: "slides",
+  collection: "",
 };
 
 async function selectSlideCollection(slidesDir: string): Promise<string> {
   const currentFilePath = import.meta.filename;
   const currentDir = path.dirname(currentFilePath);
   const slidesPath = path.resolve(currentDir, `../${slidesDir}`);
-  
+
   if (!fs.existsSync(slidesPath)) {
     throw new Error(`Slides directory not found: ${slidesPath}`);
   }
 
   const collections = readdirSync(slidesPath, { withFileTypes: true })
-    .filter(dirent => dirent.isDirectory())
-    .map(dirent => dirent.name);
+    .filter((dirent) => dirent.isDirectory())
+    .map((dirent) => dirent.name);
 
   if (collections.length === 0) {
     throw new Error(`No slide collections found in ${slidesPath}`);
   }
 
   const response = await prompts({
-    type: 'select',
-    name: 'collection',
-    message: 'Select a slide collection:',
-    choices: collections.map(name => ({ title: name, value: name }))
+    type: "select",
+    name: "collection",
+    message: "Select a slide collection:",
+    choices: collections.map((name) => ({ title: name, value: name })),
   });
 
   if (!response.collection) {
-    throw new Error('No slide collection selected');
+    throw new Error("No slide collection selected");
   }
 
   return response.collection;
 }
 
-const virtualFileId = 'virtual:slides.jsx';
+const virtualFileId = "virtual:slides.jsx";
 
 function virtualFilePageId(index: number) {
   return `virtual:slides-page-${index}.jsx`;
 }
 const virtualFilePageIdPattern = /^virtual:slides-page-(\d+)\.jsx$/;
-const nullPrefixedVirtualFilePageIdPattern = /^\0virtual:slides-page-(\d+)\.jsx$/;
+const nullPrefixedVirtualFilePageIdPattern =
+  /^\0virtual:slides-page-(\d+)\.jsx$/;
 
-export default async function slidesPlugin(options: SlidesPluginOptions = {}): Promise<Plugin> {
+export default async function slidesPlugin(
+  options: SlidesPluginOptions = {},
+): Promise<Plugin> {
   const mergedOptions = { ...defaultOptions, ...options };
   const config = {
     ...mergedOptions,
-    collection: mergedOptions.collection || await selectSlideCollection(mergedOptions.slidesDir)
+    collection:
+      mergedOptions.collection ||
+      (await selectSlideCollection(mergedOptions.slidesDir)),
   };
   let compiledSlides: string[] = [];
   return {
-    name: 'vite-plugin-slides',
-    enforce: 'pre',
+    name: "vite-plugin-slides",
+    enforce: "pre",
     resolveId(id: string) {
       if (id === virtualFileId) {
-        return '\0' + virtualFileId;
+        return "\0" + virtualFileId;
       }
       if (virtualFilePageIdPattern.test(id)) {
-        return '\0' + id;
-      };
+        return "\0" + id;
+      }
     },
     transform(code, id) {
-      if (id === '\0' + virtualFileId) {
+      if (id === "\0" + virtualFileId) {
         return {
           code: code,
           map: null,
@@ -83,14 +88,20 @@ export default async function slidesPlugin(options: SlidesPluginOptions = {}): P
       }
     },
     async load(id: string) {
-      if (id === '\0' + virtualFileId) {
+      if (id === "\0" + virtualFileId) {
         const currentFilePath = import.meta.filename;
         const currentDir = path.dirname(currentFilePath);
-        
+
         // Try MDX first, then fallback to MD
-        const mdxPath = path.resolve(currentDir, `../${config.slidesDir}/${config.collection}/index.mdx`);
-        const mdPath = path.resolve(currentDir, `../${config.slidesDir}/${config.collection}/index.md`);
-        
+        const mdxPath = path.resolve(
+          currentDir,
+          `../${config.slidesDir}/${config.collection}/index.mdx`,
+        );
+        const mdPath = path.resolve(
+          currentDir,
+          `../${config.slidesDir}/${config.collection}/index.md`,
+        );
+
         let filePath: string | undefined;
         let isMdx = false;
 
@@ -102,64 +113,79 @@ export default async function slidesPlugin(options: SlidesPluginOptions = {}): P
         }
 
         if (!filePath) {
-          return 'export default []';
+          return "export default []";
         }
 
-        const content = fs.readFileSync(filePath, 'utf-8');
-        
-        if (isMdx) {
-          const slides = content.split(/^\s*(?:---|\*\*\*|___)\s*$/m);
+        const content = fs.readFileSync(filePath, "utf-8");
 
-          const processedSlides = await Promise.all(slides.map(async (slideContent) => {
+        if (!isMdx) {
+          const replaced = content.replace(
+            /<img\s+([^>]*src="(@slide\/[^"]+)"[^>]*)>/g,
+            (_, attributes, src) => {
+              return `<img ${attributes.replace(src, `/${config.slidesDir}/${config.collection}/images/${src.slice(7)}`)}>`;
+            },
+          );
+          const slides = replaced.split(/^\s*(?:---|\*\*\*|___)\s*$/m);
+          return `export default ${JSON.stringify(slides)}`;
+        }
+
+        const slides = content.split(/^\s*(?:---|\*\*\*|___)\s*$/m);
+
+        const processedSlides = await Promise.all(
+          slides.map(async (slideContent) => {
             const result = await compile(slideContent, {
               jsx: true,
-              jsxImportSource: 'react',
-              development: false
+              jsxImportSource: "react",
+              development: false,
             });
             return result.value as string;
-          }));
+          }),
+        );
 
-          compiledSlides = processedSlides;
+        compiledSlides = processedSlides;
 
-          const numberOfSlides = slides.length;
-          function formatSlideIndex(index: number) {
-            return index.toString().padStart(numberOfSlides.toString(10).length, '0');
-          }
+        const numberOfSlides = slides.length;
+        function formatSlideIndex(index: number) {
+          return index
+            .toString()
+            .padStart(numberOfSlides.toString(10).length, "0");
+        }
 
-          // read src/slide-components directory
-          const slideComponentsDir = path.resolve(import.meta.dirname, `slide-components`);
-          const slideComponentsFilenames = fs.existsSync(slideComponentsDir) ? readdirSync(slideComponentsDir) : [];
-          function filenameToComponentName(filename: string) {
-            return filename.replace(/\.[jt]sx?$/, '');
-          }
+        // read src/slide-components directory
+        const slideComponentsDir = path.resolve(
+          import.meta.dirname,
+          `slide-components`,
+        );
+        const slideComponentsFilenames = fs.existsSync(slideComponentsDir)
+          ? readdirSync(slideComponentsDir)
+          : [];
+        function filenameToComponentName(filename: string) {
+          return filename.replace(/\.[jt]sx?$/, "");
+        }
 
-          // Return as a module
-          return `
-            ${slideComponentsFilenames.map(filename => `import * as ${filenameToComponentName(filename)} from '@components/${filename}';`).join('\n')}
+        // Return as a module
+        return `
+            ${slideComponentsFilenames.map((filename) => `import * as ${filenameToComponentName(filename)} from '@components/${filename}';`).join("\n")}
 
-            const SlideComponents = {${slideComponentsFilenames.map(filename => `...${filenameToComponentName(filename)}`).join(', ')}};
+            const SlideComponents = {${slideComponentsFilenames.map((filename) => `...${filenameToComponentName(filename)}`).join(", ")}};
 
-            ${compiledSlides.map((_, index) => `import Slide${formatSlideIndex(index)} from '${virtualFilePageId(index)}';`).join('\n')}
+            ${compiledSlides.map((_, index) => `import Slide${formatSlideIndex(index)} from '${virtualFilePageId(index)}';`).join("\n")}
 
             // provide slide components to each slide
             // Wrap SlideN components to provide SlideComponents
-            ${compiledSlides.map((_, index) => `
+            ${compiledSlides
+              .map(
+                (_, index) => `
               const Slide${formatSlideIndex(index)}WithComponents = (props) => {
                 return (
                   <Slide${formatSlideIndex(index)} {...props} components={SlideComponents} />
                 );
               };
-            `).join('\n')}
-            export default [${compiledSlides.map((_, i) => `Slide${formatSlideIndex(i)}WithComponents`).join(', ')}];
+            `,
+              )
+              .join("\n")}
+            export default [${compiledSlides.map((_, i) => `Slide${formatSlideIndex(i)}WithComponents`).join(", ")}];
           `;
-        } else {
-          // Process Markdown content as before
-          const replaced = content.replace(/<img\s+([^>]*src="(@slide\/[^"]+)"[^>]*)>/g, (_, attributes, src) => {
-            return `<img ${attributes.replace(src, `/${config.slidesDir}/${config.collection}/images/${src.slice(7)}`)}>`;
-          });
-          const slides = replaced.split(/^\s*(?:---|\*\*\*|___)\s*$/m);
-          return `export default ${JSON.stringify(slides)}`;
-        }
       }
 
       if (nullPrefixedVirtualFilePageIdPattern.test(id)) {
@@ -173,8 +199,14 @@ export default async function slidesPlugin(options: SlidesPluginOptions = {}): P
     async buildStart() {
       const currentFilePath = import.meta.filename;
       const currentDir = path.dirname(currentFilePath);
-      const sourceImagesDir = path.resolve(currentDir, `../${config.slidesDir}/${config.collection}/images`);
-      const targetImagesDir = path.resolve(currentDir, `../public/${config.slidesDir}/${config.collection}/images`);
+      const sourceImagesDir = path.resolve(
+        currentDir,
+        `../${config.slidesDir}/${config.collection}/images`,
+      );
+      const targetImagesDir = path.resolve(
+        currentDir,
+        `../public/${config.slidesDir}/${config.collection}/images`,
+      );
 
       if (fs.existsSync(sourceImagesDir)) {
         // Create target directory if it doesn't exist
@@ -191,20 +223,28 @@ export default async function slidesPlugin(options: SlidesPluginOptions = {}): P
     },
 
     configureServer(server: ViteDevServer) {
-      server.watcher.add(`**/${config.slidesDir}/${config.collection}/**/*.{md,mdx}`);
-      server.watcher.on('change', (path: string) => {
-        if (path.match(new RegExp(`\\/${config.slidesDir}\\/${config.collection}\\/.+\\.(?:md|mdx)$`))) {
+      server.watcher.add(
+        `**/${config.slidesDir}/${config.collection}/**/*.{md,mdx}`,
+      );
+      server.watcher.on("change", (path: string) => {
+        if (
+          path.match(
+            new RegExp(
+              `\\/${config.slidesDir}\\/${config.collection}\\/.+\\.(?:md|mdx)$`,
+            ),
+          )
+        ) {
           // Invalidate the module to trigger HMR
-          const mod = server.moduleGraph.getModuleById('\0' + virtualFileId);
+          const mod = server.moduleGraph.getModuleById("\0" + virtualFileId);
           if (mod) {
             server.moduleGraph.invalidateModule(mod);
             server.ws.send({
-              type: 'full-reload',
-              path: '*'
+              type: "full-reload",
+              path: "*",
             });
           }
         }
       });
-    }
+    },
   };
 }

@@ -1,3 +1,7 @@
+* {
+  box-sizing: border-box;
+}
+
 html {
   font-family: "Noto Sans JP", serif;
   font-optical-sizing: auto;
@@ -15,8 +19,10 @@ body,
   overflow: hidden;
 }
 
-* {
-  box-sizing: border-box;
+@property --slide-writing-mode {
+  syntax: "horizontal-tb | vertical-rl | vertical-lr | sideways-rl | sideways-lr";
+  inherits: true;
+  initial-value: horizontal-tb;
 }
 
 .slide-content {
@@ -46,6 +52,7 @@ body,
     max-inline-size: 100%;
     overflow: hidden;
   }
+
   h1 {
     font-size: 1.4em;
     font-weight: bold;
@@ -66,14 +73,25 @@ body,
   ol ol ol {
     margin-block-end: 0;
   }
-  .wm-horizontal {
-    writing-mode: horizontal-tb;
-  }
-  .wm-vertical {
-    writing-mode: vertical-rl;
-  }
   p {
     margin: 0;
     margin-block-end: 0.5em;
+  }
+
+  .wm-toggle {
+    @container style(--slide-writing-mode: vertical-rl) {
+      writing-mode: horizontal-tb !important;
+    }
+    @container style(--slide-writing-mode: horizontal-tb) or style(--slide-writing-mode: unset) {
+      writing-mode: vertical-rl;
+    }
+  }
+
+  .wm-horizontal {
+    writing-mode: horizontal-tb;
+  }
+
+  .wm-vertical {
+    writing-mode: vertical-rl;
   }
 }

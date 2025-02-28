@@ -1,5 +1,5 @@
 .slides-container {
-  container-name: --slide-container;
+  container-name: slide-container;
   container-type: size;
 
   width: 100dvw;
@@ -16,21 +16,6 @@
 
   border: 1px solid #ccc;
   background-color: #eee;
-}
-
-@property --slide-writing-mode {
-  syntax: "horizontal-tb | vertical-rl | vertical-lr | sideways-rl | sideways-lr";
-  inherits: true;
-  initial-value: horizontal-tb;
-}
-
-.wm-toggle {
-  @container style(--slide-writing-mode: vertical-rl) {
-    writing-mode: horizontal-tb !important;
-  }
-  @container style(--slide-writing-mode: horizontal-tb) or style(--slide-writing-mode: unset) {
-    writing-mode: vertical-rl;
-  }
 }
 
 .slides {
@@ -60,7 +45,7 @@
   max-width: calc(100cqh * 16 / 9);
   max-height: calc(100cqw * 9 / 16);
 
-  container-name: --slide;
+  container-name: slide-container;
   container-type: size;
 
   background-color: white;
@@ -76,8 +61,6 @@
   left: 40px;
   bottom: 40px;
 }
-
-
 
 @media print {
   @page {

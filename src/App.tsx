@@ -4,9 +4,8 @@ import { unified } from "unified";
 import remarkParse from "remark-parse";
 import remarkRehype from "remark-rehype";
 import rehypeStringify from "rehype-stringify";
-import { VFile } from "vfile";
 
-import slidesContent from 'virtual:slides';
+import slidesContent from 'virtual:slides.jsx';
 
 async function processMarkdown(markdown: string) {
   return await unified()
@@ -25,27 +24,35 @@ function App() {
 
   useEffect(() => {
     (async () => {
-      const content = slidesContent;
-      const slideContents = content.split(/^\s*(?:---|\*\*\*|___)\s*$/m);
+      const contents = slidesContent;
 
       const slideElements = await Promise.all(
-        slideContents.map(processMarkdown),
+        contents.map(async (content, index) => {
+          if (typeof content === 'string') {
+            const processed = await processMarkdown(content);
+            return (
+              <div className="slide" id={`page-${index}`} key={index}>
+                <div
+                  className="slide-content"
+                  dangerouslySetInnerHTML={{
+                    __html: processed.value as string,
+                  }}
+                />
+              </div>
+            );
+          } else {
+            const SlideComponent = content;
+            return (
+              <div className="slide" id={`page-${index}`} key={index}>
+                <div className="slide-content">
+                  <SlideComponent />
+                </div>
+              </div>
+            );
+          }
+        }),
       );
-      const slideElementsWithKeys = slideElements.map(
-        (slideElement: VFile, index: number) => {
-          return (
-            <div className="slide" id={`page-${index}`} key={index}>
-              <div
-                className="slide-content"
-                dangerouslySetInnerHTML={{
-                  __html: slideElement.value as string,
-                }}
-              />
-            </div>
-          );
-        },
-      );
-      setSlides(slideElementsWithKeys);
+      setSlides(slideElements);
     })();
   }, []);
 

@@ -3,6 +3,7 @@ import * as fs from 'node:fs';
 import * as path from 'node:path';
 import { mkdirSync, copyFileSync, readdirSync } from 'node:fs';
 import prompts from 'prompts';
+import { compile } from '@mdx-js/mdx';
 
 export interface SlidesPluginOptions {
   /** Directory containing the slides, relative to project root */
@@ -47,34 +48,126 @@ async function selectSlideCollection(slidesDir: string): Promise<string> {
   return response.collection;
 }
 
+const virtualFileId = 'virtual:slides.jsx';
+
+function virtualFilePageId(index: number) {
+  return `virtual:slides-page-${index}.jsx`;
+}
+const virtualFilePageIdPattern = /^virtual:slides-page-(\d+)\.jsx$/;
+const nullPrefixedVirtualFilePageIdPattern = /^\0virtual:slides-page-(\d+)\.jsx$/;
+
 export default async function slidesPlugin(options: SlidesPluginOptions = {}): Promise<Plugin> {
   const mergedOptions = { ...defaultOptions, ...options };
   const config = {
     ...mergedOptions,
     collection: mergedOptions.collection || await selectSlideCollection(mergedOptions.slidesDir)
   };
+  let compiledSlides: string[] = [];
   return {
     name: 'vite-plugin-slides',
+    enforce: 'pre',
     resolveId(id: string) {
-      if (id === 'virtual:slides') {
-        return '\0virtual:slides';
+      if (id === virtualFileId) {
+        return '\0' + virtualFileId;
       }
-      return undefined;
+      if (virtualFilePageIdPattern.test(id)) {
+        return '\0' + id;
+      };
     },
-    load(id: string) {
-      if (id === '\0virtual:slides') {
+    transform(code, id) {
+      if (id === '\0' + virtualFileId) {
+        return {
+          code: code,
+          map: null,
+        };
+      }
+    },
+    async load(id: string) {
+      if (id === '\0' + virtualFileId) {
         const currentFilePath = import.meta.filename;
         const currentDir = path.dirname(currentFilePath);
-        const slidePath = path.resolve(currentDir, `../${config.slidesDir}/${config.collection}/index.md`);
         
-        if (fs.existsSync(slidePath)) {
-          const content = fs.readFileSync(slidePath, 'utf-8');
+        // Try MDX first, then fallback to MD
+        const mdxPath = path.resolve(currentDir, `../${config.slidesDir}/${config.collection}/index.mdx`);
+        const mdPath = path.resolve(currentDir, `../${config.slidesDir}/${config.collection}/index.md`);
+        
+        let filePath: string | undefined;
+        let isMdx = false;
+
+        if (fs.existsSync(mdxPath)) {
+          filePath = mdxPath;
+          isMdx = true;
+        } else if (fs.existsSync(mdPath)) {
+          filePath = mdPath;
+        }
+
+        if (!filePath) {
+          return 'export default []';
+        }
+
+        const content = fs.readFileSync(filePath, 'utf-8');
+        
+        if (isMdx) {
+          const slides = content.split(/^\s*(?:---|\*\*\*|___)\s*$/m);
+
+          const processedSlides = await Promise.all(slides.map(async (slideContent) => {
+            const result = await compile(slideContent, {
+              jsx: true,
+              jsxImportSource: 'react',
+              development: false
+            });
+            return result.value as string;
+          }));
+
+          compiledSlides = processedSlides;
+
+          const numberOfSlides = slides.length;
+          function formatSlideIndex(index: number) {
+            return index.toString().padStart(numberOfSlides.toString(10).length, '0');
+          }
+
+          // read src/slide-components directory
+          const slideComponentsDir = path.resolve(import.meta.dirname, `slide-components`);
+          const slideComponentsFilenames = fs.existsSync(slideComponentsDir) ? readdirSync(slideComponentsDir) : [];
+          function filenameToComponentName(filename: string) {
+            return filename.replace(/\.[jt]sx?$/, '');
+          }
+
+          // Return as a module
+          return `
+            ${slideComponentsFilenames.map(filename => `import * as ${filenameToComponentName(filename)} from '@components/${filename}';`).join('\n')}
+
+            const SlideComponents = {${slideComponentsFilenames.map(filename => `...${filenameToComponentName(filename)}`).join(', ')}};
+
+            ${compiledSlides.map((_, index) => `import Slide${formatSlideIndex(index)} from '${virtualFilePageId(index)}';`).join('\n')}
+
+            // provide slide components to each slide
+            // Wrap SlideN components to provide SlideComponents
+            ${compiledSlides.map((_, index) => `
+              const Slide${formatSlideIndex(index)}WithComponents = (props) => {
+                return (
+                  <Slide${formatSlideIndex(index)} {...props} components={SlideComponents} />
+                );
+              };
+            `).join('\n')}
+            export default [${compiledSlides.map((_, i) => `Slide${formatSlideIndex(i)}WithComponents`).join(', ')}];
+          `;
+        } else {
+          // Process Markdown content as before
           const replaced = content.replace(/<img\s+([^>]*src="(@slide\/[^"]+)"[^>]*)>/g, (_, attributes, src) => {
             return `<img ${attributes.replace(src, `/${config.slidesDir}/${config.collection}/images/${src.slice(7)}`)}>`;
           });
-          return `export default ${JSON.stringify(replaced)}`;
+          const slides = replaced.split(/^\s*(?:---|\*\*\*|___)\s*$/m);
+          return `export default ${JSON.stringify(slides)}`;
         }
-        return 'export default ""';
+      }
+
+      if (nullPrefixedVirtualFilePageIdPattern.test(id)) {
+        const match = id.match(nullPrefixedVirtualFilePageIdPattern);
+        if (match) {
+          const index = parseInt(match[1], 10);
+          return compiledSlides[index];
+        }
       }
     },
     async buildStart() {
@@ -98,11 +191,11 @@ export default async function slidesPlugin(options: SlidesPluginOptions = {}): P
     },
 
     configureServer(server: ViteDevServer) {
-      server.watcher.add(`**/${config.slidesDir}/${config.collection}/**/*.md`);
+      server.watcher.add(`**/${config.slidesDir}/${config.collection}/**/*.{md,mdx}`);
       server.watcher.on('change', (path: string) => {
-        if (path.match(new RegExp(`\\/${config.slidesDir}\\/${config.collection}\\/.+\\.md$`))) {
+        if (path.match(new RegExp(`\\/${config.slidesDir}\\/${config.collection}\\/.+\\.(?:md|mdx)$`))) {
           // Invalidate the module to trigger HMR
-          const mod = server.moduleGraph.getModuleById('\0virtual:slides');
+          const mod = server.moduleGraph.getModuleById('\0' + virtualFileId);
           if (mod) {
             server.moduleGraph.invalidateModule(mod);
             server.ws.send({

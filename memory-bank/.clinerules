@@ -1,0 +1,147 @@
+# Cline Rules for CSS Behavior with Vertical Writing Project
+
+## Project Context
+
+This is a presentation project focused on CSS vertical writing behavior. The project aims to educate developers about implementing vertical text layouts using CSS logical properties and proper font handling.
+
+## Project Structure Rules
+
+- All new files related to slides go in `/slides` directory
+- Component implementations belong in `/src/slide-components`
+- CSS files are module-based and co-located with components
+- Asset files (images, etc.) go in slide-specific `/images` directories
+
+## Code Style Preferences
+
+- TypeScript for all source files
+- Module CSS for styling
+- Auto-formatting enabled (Prettier)
+- ESLint rules enforced
+
+## Development Workflow
+
+1. Create/update slide content in MDX
+2. Implement necessary components
+3. Add required styles
+4. Test in development server
+5. Document changes in appropriate memory bank files
+
+## Critical Paths
+
+- `/slides/css-from-vertical-world/index.md` - Main presentation content
+- `/src/slide-components/` - Core presentation components
+- `/src/App.tsx` - Main application setup
+- `/src/vite-plugin-slides.ts` - Custom slide processing
+
+## Writing Mode Patterns
+
+1. Global Writing Mode Control:
+
+   - Use CSS custom property `--slide-writing-mode`
+   - Toggle between 'vertical-rl' and 'horizontal-tb'
+   - Container queries for layout adaptation
+   - Print-specific mode handling
+
+2. Layout Components:
+
+   - Center: Centered content in both modes
+   - HeaderAndContent: Title with body content
+   - Writing mode responsive containers
+
+3. Navigation System:
+
+   - Scroll snap for slide alignment
+   - Hash-based slide identification
+   - Keyboard and wheel event handling
+   - IntersectionObserver for tracking
+
+4. Print Optimization:
+   - @page rules for size and margins
+   - Writing mode preservation
+   - Container query resets
+   - Page break control
+
+## Tool Usage Guidelines
+
+1. Use `pnpm` for package management
+2. Development server: `pnpm dev`
+3. Building: `pnpm build`
+4. Linting: `pnpm lint`
+
+## Memory Bank Updates
+
+- Update after significant component changes
+- Document new patterns discovered
+- Track progress regularly
+- Keep technical decisions documented
+
+## Project-Specific Insights
+
+1. Container Query Usage:
+
+   - Container type: size
+   - Width/height calculations
+   - Writing mode adaptations
+
+2. CSS Layout Patterns:
+
+   - Logical properties for consistency
+   - Container-relative units (cqw/cqh)
+   - Aspect ratio maintenance
+   - Overflow handling
+
+3. Event Handling:
+   - Keyboard navigation (arrows, space)
+   - Wheel event control
+   - Writing mode toggle
+   - History management
+
+## Common Operations
+
+1. Adding new slides:
+
+   - Create in appropriate `/slides` directory
+   - Use layout components
+   - Test in both writing modes
+   - Verify print output
+
+2. Implementing examples:
+
+   - Use container queries
+   - Test writing mode transitions
+   - Verify print layout
+   - Check responsive behavior
+
+3. Content updates:
+   - Follow MDX structure
+   - Test both writing modes
+   - Verify print output
+   - Check navigation flow
+
+## Debug Checklist
+
+1. Writing mode transitions
+2. Container query behavior
+3. Print layout verification
+4. Navigation functionality
+5. Browser compatibility
+
+## Performance Considerations
+
+1. Container Query Impact:
+
+   - Monitor layout recalculations
+   - Check transition smoothness
+   - Optimize container hierarchy
+
+2. Scroll Performance:
+   - Smooth scroll behavior
+   - Snap point efficiency
+   - Event handler throttling
+
+## Future Enhancements
+
+- Writing mode keyboard shortcuts
+- Additional layout components
+- Print layout refinements
+- Advanced CSS demonstrations

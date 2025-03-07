@@ -1,0 +1,85 @@
+name: Deploy to GitHub Pages
+
+on:
+  push:
+    branches:
+      - master
+  workflow_dispatch:
+    inputs:
+      slide:
+        description: "Specific slide to deploy (leave empty to deploy all)"
+        required: false
+        type: string
+
+permissions:
+  contents: write
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v3
+        with:
+          version: 8
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: "pnpm"
+
+      - name: Install dependencies
+        run: pnpm install
+
+      - name: Build slides
+        run: |
+          mkdir -p pages
+          if [ -n "${{ github.event.inputs.slide }}" ]; then
+            # Build specific slide
+            echo "Building ${{ github.event.inputs.slide }}..."
+            SLIDE_PATH="${{ github.event.inputs.slide }}" pnpm run build
+            mkdir -p "pages/${{ github.event.inputs.slide }}"
+            cp -r dist/* "pages/${{ github.event.inputs.slide }}/"
+          else
+            # Build all slides
+            for slide in slides/*; do
+              if [ -d "$slide" ]; then
+                name=$(basename "$slide")
+                echo "Building $name..."
+                SLIDE_PATH="$name" pnpm run build
+                mkdir -p "pages/$name"
+                cp -r dist/* "pages/$name/"
+              fi
+            done
+          fi
+
+      - name: Create index page
+        if: ${{ github.event.inputs.slide == '' }}
+        run: |
+          {
+            echo '<!DOCTYPE html>'
+            echo '<html>'
+            echo '<head>'
+            echo '  <meta charset="UTF-8">'
+            echo '  <title>Slides Index</title>'
+            echo '</head>'
+            echo '<body>'
+            echo '  <h1>Available Slides</h1>'
+            echo '  <ul>'
+            for slide in slides/*; do
+              if [ -d "$slide" ]; then
+                name=$(basename "$slide")
+                echo "    <li><a href=\"$name/\">$name</a></li>"
+              fi
+            done
+            echo '  </ul>'
+            echo '</body>'
+            echo '</html>'
+          } > pages/index.html
+
+      - name: Deploy
+        uses: peaceiris/actions-gh-pages@v3
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./pages

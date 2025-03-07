@@ -53,7 +53,7 @@ test.describe("Print mode test", () => {
     );
   });
 
-  test("multiple slides in print", async ({ page }) => {
+  test("multiple slides in print", async ({ page, browserName }) => {
     // 印刷モードに切り替え
     await page.emulateMedia({ media: "print" });
     await page.waitForTimeout(300);
@@ -70,6 +70,15 @@ test.describe("Print mode test", () => {
       const slide = page.locator(".slide").nth(i);
       await slide.waitFor({ state: "visible" });
       await page.waitForTimeout(300);
+
+      // Firefoxの場合は異なる挙動であることをテストでマーク
+      if (browserName === "firefox" && i === 2) {
+        test.info().annotations.push({
+          type: "issue",
+          description:
+            "Firefox does not support container style queries for custom properties yet",
+        });
+      }
 
       // スクリーンショットを取得して検証
       await expect(page).toHaveScreenshot(

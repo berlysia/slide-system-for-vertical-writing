@@ -92,7 +92,10 @@ test.describe("Visual regression test", () => {
     );
   });
 
-  test("writing mode switching on different pages", async ({ page }) => {
+  test("writing mode switching on different pages", async ({
+    page,
+    browserName,
+  }) => {
     // 2ページ目へ移動
     const nextButton = page.getByText("次");
     await nextButton.click();
@@ -116,6 +119,15 @@ test.describe("Visual regression test", () => {
     // 3ページ目へ移動
     await nextButton.click();
     await page.waitForTimeout(300);
+
+    // Firefoxの場合は異なる挙動であることをテストでマーク
+    if (browserName === "firefox") {
+      test.info().annotations.push({
+        type: "issue",
+        description:
+          "Firefox does not support container style queries for custom properties yet",
+      });
+    }
 
     // 3ページ目の縦書きモードのスクリーンショット
     await expect(page).toHaveScreenshot(

@@ -14,7 +14,8 @@ export default defineConfig(async () => ({
   plugins: [
     await slidesPlugin({
       slidesDir: "slides",
-      collection: process.env.SLIDE_PATH || undefined,
+      collection:
+        process.env.SLIDE_PATH || (process.env.isAI ? "vrt-test" : undefined),
     }),
     mdx({
       jsx: true,

@@ -63,10 +63,11 @@ This is a presentation project focused on CSS vertical writing behavior. The pro
 
 ## Tool Usage Guidelines
 
-1. Use `pnpm` for package management
-2. Development server: `pnpm dev`
-3. Building: `pnpm build`
-4. Linting: `pnpm lint`
+1. Provide `AI` environment variable
+2. Use `pnpm` for package management
+3. Development server: `pnpm dev`
+4. Building: `pnpm build`
+5. Linting: `pnpm lint`
 
 ## Memory Bank Updates
 

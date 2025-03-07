@@ -239,6 +239,9 @@ export default async function slidesPlugin(
         ) {
           // Invalidate the module to trigger HMR
           const mod = server.moduleGraph.getModuleById("\0" + virtualFileId);
+          const pageMods = compiledSlides.map((_, i) =>
+            server.moduleGraph.getModuleById(virtualFilePageId(i)),
+          );
           if (mod) {
             server.moduleGraph.invalidateModule(mod);
             server.ws.send({
@@ -246,6 +249,15 @@ export default async function slidesPlugin(
               path: "*",
             });
           }
+          for (const pageMod of pageMods) {
+            if (pageMod) {
+              server.moduleGraph.invalidateModule(pageMod);
+            }
+          }
+          server.ws.send({
+            type: "full-reload",
+            path: "*",
+          });
         }
       });
     },

@@ -78,16 +78,42 @@
 }
 
 @media print {
+  @property --print-slide-width {
+    syntax: "<length>";
+    inherits: true;
+    initial-value: 0px;
+  }
+  
+  @property --print-slide-height {
+    syntax: "<length>";
+    inherits: true;
+    initial-value: 0px;
+  }
+
+  :root {
+    --print-page-width: 1920px;
+    --print-page-height: 1080px;
+    --print-slide-width: calc(var(--print-page-width) - 500px);
+    --print-slide-height: calc(var(--print-page-height) - 100px);
+  }
+
   @page {
-    size: 1920px 1080px;
+    size: var(--print-page-width) var(--print-page-height);
     margin: 0;
   }
 
   /* Support for Safari's print page size */
   @supports (-webkit-appearance:none) {
+    :root {
+      --print-page-width: 508mm;
+      --print-page-height: 285.75mm;
+      --print-slide-width: calc(var(--print-page-width) - 0mm);
+      --print-slide-height: calc(var(--print-page-height) - 16mm);
+    }
+
     @page {
       /* Safari needs explicit millimeter units */
-      size: 508mm 285.75mm;
+      size: var(--print-page-width) var(--print-page-height);
     }
   }
 
@@ -124,7 +150,8 @@
     height: unset;
     max-width: unset !important;
     max-height: unset !important;
-    writing-mode: unset !important; /* Force unset in print mode */
+    /* Force unset in print mode */
+    writing-mode: unset !important;
     /* Fix for Firefox and Safari print layout */
     display: block !important;
     transform: none !important;
@@ -144,8 +171,8 @@
     /* Legacy page break properties for older browsers */
     page-break-after: always;
     page-break-inside: avoid;
-    height: 100vh;
-    width: 100vw;
+    height: var(--print-slide-height);
+    width: var(--print-slide-width);
     /* Reset container query values in print mode */
     max-width: unset !important;
     max-height: unset !important;

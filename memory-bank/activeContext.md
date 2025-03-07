@@ -10,6 +10,10 @@ Development of a slide presentation system focusing on CSS behavior with vertica
 - Keyboard and wheel-based slide navigation
 - Print media optimization with @page rules
 - MDX-based slide system with layout components
+- Visual Regression Testing implementation with Playwright
+  - Writing mode toggle testing
+  - Responsive layout testing
+  - GitHub Actions integration
 
 ## Active Decisions
 
@@ -19,6 +23,7 @@ Development of a slide presentation system focusing on CSS behavior with vertica
 2. Component-based slide system
 3. MDX for content authoring
 4. Custom plugin for slide processing
+5. Playwright for Visual Regression Testing
 
 ### Implementation Strategy
 
@@ -34,6 +39,10 @@ Development of a slide presentation system focusing on CSS behavior with vertica
    - MDX slides
    - Visual examples
    - Interactive demonstrations
+4. Testing strategy
+   - Visual regression tests
+   - Multiple viewport sizes
+   - Writing mode state verification
 
 ## Current Considerations
 
@@ -44,6 +53,8 @@ Development of a slide presentation system focusing on CSS behavior with vertica
 - Print media optimization
 - Scroll snap for slide navigation
 - IntersectionObserver for slide position tracking
+- Visual regression testing for layout changes
+- CI/CD pipeline with GitHub Actions
 
 ### Content
 
@@ -51,6 +62,7 @@ Development of a slide presentation system focusing on CSS behavior with vertica
 - Clear visual examples
 - Interactive demonstrations
 - Practical use cases
+- Test coverage for visual changes
 
 ## Next Steps
 
@@ -60,6 +72,7 @@ Development of a slide presentation system focusing on CSS behavior with vertica
 2. Add more layout components for complex slides
 3. Improve print layout handling
 4. Create comprehensive CSS examples
+5. Expand VRT coverage for new components
 
 ### Medium Term
 
@@ -67,6 +80,7 @@ Development of a slide presentation system focusing on CSS behavior with vertica
 2. Add more complex examples
 3. Improve transitions
 4. Polish visual design
+5. Automate visual testing in CI pipeline
 
 ### Long Term
 
@@ -74,6 +88,7 @@ Development of a slide presentation system focusing on CSS behavior with vertica
 2. Create comprehensive documentation
 3. Optimize performance
 4. Consider additional features
+5. Enhance testing infrastructure
 
 ## Open Questions
 
@@ -81,3 +96,4 @@ Development of a slide presentation system focusing on CSS behavior with vertica
 - Optimal navigation UX for presentation
 - Performance considerations for complex demos
 - Browser compatibility concerns
+- Visual testing strategy for dynamic content

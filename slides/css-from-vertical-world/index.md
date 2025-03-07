@@ -621,10 +621,10 @@ Flexboxのもとでは、
 ```
 .myclass {
   container-type: size;
-  container-name: --my-container-name;
+  container-name: my-container-name;
   /*
   HTML側に逃すこともできそうね
-  container-name: attr(id type(<custom-ident>), none);
+  container-name: attr(id type(<ident>), none);
   */
 }
 /* 〜 */

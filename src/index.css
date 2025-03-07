@@ -80,6 +80,7 @@ body,
 
   .wm-toggle {
     @container style(--slide-writing-mode: vertical-rl) {
+      /* !importantがないと上書きできない。詳細度？ */
       writing-mode: horizontal-tb !important;
     }
     @container style(--slide-writing-mode: horizontal-tb) or style(--slide-writing-mode: unset) {

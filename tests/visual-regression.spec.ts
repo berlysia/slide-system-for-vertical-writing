@@ -51,4 +51,70 @@ test.describe("Visual regression test", () => {
       );
     }
   });
+
+  test("navigation between pages", async ({ page }) => {
+    // 最初のページのスクリーンショット
+    await expect(page).toHaveScreenshot(
+      `page1-${test.info().project.name}.png`,
+    );
+
+    // 次のページに移動
+    const nextButton = page.getByText("次");
+    await nextButton.click();
+    await page.waitForTimeout(300);
+
+    // 2ページ目のスクリーンショット
+    await expect(page).toHaveScreenshot(
+      `page2-${test.info().project.name}.png`,
+    );
+
+    // さらに次のページに移動
+    await nextButton.click();
+    await page.waitForTimeout(300);
+
+    // 3ページ目のスクリーンショット
+    await expect(page).toHaveScreenshot(
+      `page3-${test.info().project.name}.png`,
+    );
+  });
+
+  test("writing mode switching on different pages", async ({ page }) => {
+    // 最初のページで横書きモードに設定
+    const writingModeButton = page.getByText(/書きにする/);
+    await writingModeButton.waitFor({ state: "visible" });
+
+    const text = await writingModeButton.textContent();
+    if (text?.includes("横書き")) {
+      await writingModeButton.click();
+      await page.waitForTimeout(300);
+    }
+
+    // 2ページ目に移動
+    const nextButton = page.getByText("次");
+    await nextButton.click();
+    await page.waitForTimeout(300);
+
+    // 2ページ目の横書きモードのスクリーンショット
+    await expect(page).toHaveScreenshot(
+      `page2-horizontal-${test.info().project.name}.png`,
+    );
+
+    // 縦書きモードに切り替え
+    await writingModeButton.click();
+    await page.waitForTimeout(300);
+
+    // 2ページ目の縦書きモードのスクリーンショット
+    await expect(page).toHaveScreenshot(
+      `page2-vertical-${test.info().project.name}.png`,
+    );
+
+    // 3ページ目に移動
+    await nextButton.click();
+    await page.waitForTimeout(300);
+
+    // 3ページ目の縦書きモードのスクリーンショット
+    await expect(page).toHaveScreenshot(
+      `page3-vertical-${test.info().project.name}.png`,
+    );
+  });
 });

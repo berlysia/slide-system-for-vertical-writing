@@ -50,10 +50,21 @@ Development of a slide presentation system focusing on CSS behavior with vertica
 
 - Container queries for responsive slide layouts
 - CSS custom properties for writing mode control
-- Print media optimization
+- Print media optimization:
+  - Cross-browser behavior differences in print mode
+  - Specific issues with empty pages in Chrome
+  - Safari's page size inconsistencies
+  - Firefox's rendering range issues
+  - Size and margin control using @page rules
+  - Writing mode considerations in print layout
 - Scroll snap for slide navigation
 - IntersectionObserver for slide position tracking
-- Visual regression testing for layout changes
+- Visual regression testing:
+  - Importance of visual verification
+  - Danger of updating snapshots without inspection
+  - Browser-specific layout differences
+  - Image diff analysis for layout changes
+  - Test strategy for print media layouts
 - CI/CD pipeline with GitHub Actions
 
 ### Content

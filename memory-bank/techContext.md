@@ -114,11 +114,52 @@ tests/
 
 ### Testing Strategy
 
-- Visual regression tests for layout changes
-- Multiple viewport sizes (1920x1080, 1280x720)
-- Writing mode state verification
-- Automated testing in CI pipeline
-- Environment variable `AI=1` for test execution
+#### Visual Regression Testing
+
+- Base principles:
+
+  - Always verify screenshot content visually
+  - Never blindly update snapshots
+  - Document expected visual differences
+  - Consider browser-specific behaviors
+
+- Test coverage:
+
+  - Layout changes in different modes
+  - Multiple viewport sizes (1920x1080, 1280x720)
+  - Writing mode state verification
+  - Print media layout verification
+  - Responsive design behavior
+
+- Test implementation:
+  - Use `fullPage: true` for complete capture
+  - `scale: "css"` for accurate rendering
+  - Proper element visibility verification
+  - Consistent screenshot timing
+  - Explicit style application waiting
+
+#### Print Mode Testing
+
+- Browser-specific considerations:
+
+  - Chrome: Empty pages issue with `page-break-after`
+  - Safari: Inconsistent page size handling
+  - Firefox: Viewport rendering differences
+
+- Print media emulation:
+
+  - Use `@page` rules for size control
+  - Explicit size units (px, mm)
+  - Proper overflow handling
+  - Writing mode preservation
+  - Break control (`page-break-*`, `break-*`)
+
+- Layout verification:
+  - Page size consistency
+  - Content positioning
+  - Writing mode application
+  - Break behavior
+  - Margin and padding handling
 
 ### CI/CD Pipeline
 

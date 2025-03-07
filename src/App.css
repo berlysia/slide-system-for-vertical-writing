@@ -22,8 +22,9 @@
   /* コンテナーの中を最大に占める16/9の寸法 */
   width: 100cqw;
   height: 100cqh;
-  max-width: calc(100cqh * 16 / 9);
-  max-height: calc(100cqw * 9 / 16);
+  /* Fix container query precision issues */
+  max-width: calc(100cqh * 16 / 9 - 0.01px);
+  max-height: calc(100cqw * 9 / 16 - 0.01px);
 
   scroll-snap-type: both mandatory;
   writing-mode: var(--slide-writing-mode);
@@ -42,8 +43,9 @@
 .slide {
   width: 100cqw;
   height: 100cqh;
-  max-width: calc(100cqh * 16 / 9);
-  max-height: calc(100cqw * 9 / 16);
+  /* Fix container query precision issues */
+  max-width: calc(100cqh * 16 / 9 - 0.01px);
+  max-height: calc(100cqw * 9 / 16 - 0.01px);
 
   container-name: slide-container;
   container-type: size;
@@ -51,8 +53,21 @@
   background-color: white;
 
   scroll-snap-align: center;
+  /* Safari and Firefox need this for consistent scroll snapping */
+  scroll-snap-stop: always;
 
   overflow: hidden;
+
+  /* Support for older versions of Firefox */
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+  /* Support for older versions of Safari */
+  -webkit-overflow-scrolling: touch;
+}
+
+/* Hide scrollbars consistently across browsers */
+.slide::-webkit-scrollbar {
+  display: none;
 }
 
 .controls {
@@ -68,25 +83,37 @@
     margin: 0;
   }
 
+  /* Support for Safari's print page size */
+  @supports (-webkit-appearance:none) {
+    @page {
+      /* Safari needs explicit millimeter units */
+      size: 508mm 285.75mm;
+    }
+  }
+
   html,
   body,
   #root {
     overflow: visible !important;
+    height: auto !important; /* Firefox print fix */
   }
 
   body {
     margin: 0;
     padding: 0;
+    -webkit-print-color-adjust: exact; /* Support for Safari background printing */
+    print-color-adjust: exact;
   }
 
   .slides-container {
     all: unset;
     margin: 0;
     padding: 0;
+    container-type: initial !important; /* Fix for Firefox container query issues in print */
   }
 
   .controls {
-    display: none;
+    display: none !important; /* Ensure controls are hidden in all browsers */
   }
 
   .slides {
@@ -95,9 +122,12 @@
     overflow: visible;
     width: unset;
     height: unset;
-    max-width: unset;
-    max-height: unset;
-    writing-mode: unset;
+    max-width: unset !important;
+    max-height: unset !important;
+    writing-mode: unset !important; /* Force unset in print mode */
+    /* Fix for Firefox and Safari print layout */
+    display: block !important;
+    transform: none !important;
   }
 
   .slide {
@@ -108,9 +138,32 @@
     margin: 0;
     padding: 0;
     background: white;
+    /* Modern page break properties */
+    break-after: page;
+    break-inside: avoid;
+    /* Legacy page break properties for older browsers */
     page-break-after: always;
     page-break-inside: avoid;
     height: 100vh;
     width: 100vw;
+    /* Reset container query values in print mode */
+    max-width: unset !important;
+    max-height: unset !important;
+    /* Fix for Safari print rendering */
+    -webkit-transform-origin: top left;
+    transform-origin: top left;
+    /* Fix for Firefox print scaling */
+    zoom: 1;
+    /* Ensure text remains crisp in print */
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  /* Fix for Firefox print margins */
+  @-moz-document url-prefix() {
+    .slide {
+      margin: 0 !important;
+      padding: 0 !important;
+    }
   }
 }

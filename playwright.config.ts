@@ -11,6 +11,7 @@ export default defineConfig({
   retries: isCI ? 2 : 0,
   workers: isCI ? 1 : undefined,
   reporter: isAI ? "line" : isCI ? "github" : [["html", { open: "never" }]],
+  timeout: 30000,
 
   use: {
     baseURL: "http://localhost:5173",
@@ -20,15 +21,24 @@ export default defineConfig({
 
   projects: [
     {
-      name: "desktop-1920",
+      name: "chromium",
       use: {
+        ...devices["Desktop Chrome"],
         viewport: { width: 1920, height: 1080 },
       },
     },
     {
-      name: "desktop-1280",
+      name: "firefox",
       use: {
-        viewport: { width: 1280, height: 720 },
+        ...devices["Desktop Firefox"],
+        viewport: { width: 1920, height: 1080 },
+      },
+    },
+    {
+      name: "webkit",
+      use: {
+        ...devices["Desktop Safari"],
+        viewport: { width: 1920, height: 1080 },
       },
     },
   ],

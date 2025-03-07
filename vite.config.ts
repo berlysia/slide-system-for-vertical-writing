@@ -12,16 +12,16 @@ export default defineConfig(async () => ({
     },
   },
   plugins: [
+    await slidesPlugin({
+      slidesDir: "slides",
+      collection: process.env.SLIDE_PATH || undefined,
+    }),
     mdx({
       jsx: true,
       jsxImportSource: "react",
       providerImportSource: "@mdx-js/react",
     }),
     react(),
-    await slidesPlugin({
-      slidesDir: "slides",
-      collection: process.env.SLIDE_PATH || undefined,
-    }),
   ],
   optimizeDeps: {
     // Add virtual module to optimization

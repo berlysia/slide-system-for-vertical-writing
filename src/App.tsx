@@ -5,7 +5,7 @@ import remarkParse from "remark-parse";
 import remarkRehype from "remark-rehype";
 import rehypeStringify from "rehype-stringify";
 
-import slidesContent from "virtual:slides.jsx";
+import slidesContent from "virtual:slides.js";
 
 async function processMarkdown(markdown: string) {
   return await unified()

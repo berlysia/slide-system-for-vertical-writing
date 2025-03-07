@@ -48,14 +48,14 @@ async function selectSlideCollection(slidesDir: string): Promise<string> {
   return response.collection;
 }
 
-const virtualFileId = "virtual:slides.jsx";
+const virtualFileId = "virtual:slides.js";
 
 function virtualFilePageId(index: number) {
-  return `virtual:slides-page-${index}.jsx`;
+  return `virtual:slides-page-${index}.js`;
 }
-const virtualFilePageIdPattern = /^virtual:slides-page-(\d+)\.jsx$/;
+const virtualFilePageIdPattern = /^virtual:slides-page-(\d+)\.js$/;
 const nullPrefixedVirtualFilePageIdPattern =
-  /^\0virtual:slides-page-(\d+)\.jsx$/;
+  /^\0virtual:slides-page-(\d+)\.js$/;
 
 export default async function slidesPlugin(
   options: SlidesPluginOptions = {},
@@ -80,9 +80,12 @@ export default async function slidesPlugin(
       }
     },
     transform(code, id) {
-      if (id === "\0" + virtualFileId) {
+      if (
+        id === "\0" + virtualFileId ||
+        nullPrefixedVirtualFilePageIdPattern.test(id)
+      ) {
         return {
-          code: code,
+          code: `import React from 'react';\n${code}`,
           map: null,
         };
       }
@@ -134,8 +137,7 @@ export default async function slidesPlugin(
         const processedSlides = await Promise.all(
           slides.map(async (slideContent) => {
             const result = await compile(slideContent, {
-              jsx: true,
-              jsxImportSource: "react",
+              outputFormat: "program",
               development: false,
             });
             return result.value as string;
@@ -177,9 +179,10 @@ export default async function slidesPlugin(
               .map(
                 (_, index) => `
               const Slide${formatSlideIndex(index)}WithComponents = (props) => {
-                return (
-                  <Slide${formatSlideIndex(index)} {...props} components={SlideComponents} />
-                );
+                return React.createElement(Slide${formatSlideIndex(index)}, {
+                  ...props,
+                  components: SlideComponents
+                });
               };
             `,
               )

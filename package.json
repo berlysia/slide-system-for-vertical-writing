@@ -8,6 +8,7 @@
     "build": "tsc -b && vite build",
     "lint": "eslint .",
     "preview": "vite preview",
+    "build:pages": "node scripts/build-pages.ts",
     "test:vrt": "playwright test",
     "test:vrt:clear": "rm -rf tests/__snapshots__",
     "test:vrt:update": "playwright test --update-snapshots",

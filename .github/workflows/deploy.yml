@@ -43,57 +43,16 @@ jobs:
 
       - uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: ">=23.6"
           cache: "pnpm"
 
       - name: Install dependencies
         run: pnpm install
 
-      - name: Build slides
+      - name: Build and deploy slides
         run: |
-          mkdir -p pages
-          if [ -n "${{ github.event.inputs.slide }}" ]; then
-            # Build specific slide
-            echo "Building ${{ github.event.inputs.slide }}..."
-            SLIDE_PATH="${{ github.event.inputs.slide }}" pnpm run build
-            mkdir -p "pages/${{ github.event.inputs.slide }}"
-            cp -r dist/* "pages/${{ github.event.inputs.slide }}/"
-          else
-            # Build all slides
-            for slide in slides/*; do
-              if [ -d "$slide" ]; then
-                name=$(basename "$slide")
-                echo "Building $name..."
-                SLIDE_PATH="$name" pnpm run build
-                mkdir -p "pages/$name"
-                cp -r dist/* "pages/$name/"
-              fi
-            done
-          fi
-
-      - name: Create index page
-        if: ${{ github.event.inputs.slide == '' }}
-        run: |
-          {
-            echo '<!DOCTYPE html>'
-            echo '<html>'
-            echo '<head>'
-            echo '  <meta charset="UTF-8">'
-            echo '  <title>Slides Index</title>'
-            echo '</head>'
-            echo '<body>'
-            echo '  <h1>Available Slides</h1>'
-            echo '  <ul>'
-            for slide in slides/*; do
-              if [ -d "$slide" ]; then
-                name=$(basename "$slide")
-                echo "    <li><a href=\"$name/\">$name</a></li>"
-              fi
-            done
-            echo '  </ul>'
-            echo '</body>'
-            echo '</html>'
-          } > pages/index.html
+          chmod +x scripts/build-pages.ts
+          SLIDE_PATH="${{ github.event.inputs.slide }}" node scripts/build-pages.ts
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:

@@ -1,70 +1,13 @@
-import { useState, useRef, JSX, useEffect, useCallback } from "react";
-import { unified } from "unified";
-import remarkParse from "remark-parse";
-import remarkRehype from "remark-rehype";
-import rehypeStringify from "rehype-stringify";
-
+import { useState, useRef, useEffect } from "react";
 import slidesContent from "virtual:slides.js";
-
-async function processMarkdown(markdown: string) {
-  return await unified()
-    .use(remarkParse)
-    .use(remarkRehype, { allowDangerousHtml: true })
-    .use(rehypeStringify, { allowDangerousHtml: true })
-    .process(markdown);
-}
 
 function App() {
   const [writingMode, setWritingMode] = useState("vertical-rl");
   const isVertical = writingMode !== "horizontal-tb";
   const slidesRef = useRef<HTMLDivElement>(null);
 
-  const [slides, setSlides] = useState<JSX.Element[]>([]);
-
   const [fontSize, setFontSize] = useState(42);
   const [withAbsoluteFontSize, setWithAbsoluteFontSize] = useState(false);
-
-  useEffect(() => {
-    (async () => {
-      const contents = slidesContent;
-
-      const slideElements = await Promise.all(
-        contents.map(async (content, index) => {
-          if (typeof content === "string") {
-            const processed = await processMarkdown(content);
-            return (
-              <div className="slide" id={`page-${index}`} key={index}>
-                <div
-                  className="slide-content"
-                  style={
-                    withAbsoluteFontSize ? { fontSize: `${fontSize}px` } : {}
-                  }
-                  dangerouslySetInnerHTML={{
-                    __html: processed.value as string,
-                  }}
-                />
-              </div>
-            );
-          } else {
-            const SlideComponent = content;
-            return (
-              <div className="slide" id={`page-${index}`} key={index}>
-                <div
-                  className="slide-content"
-                  style={
-                    withAbsoluteFontSize ? { fontSize: `${fontSize}px` } : {}
-                  }
-                >
-                  <SlideComponent />
-                </div>
-              </div>
-            );
-          }
-        }),
-      );
-      setSlides(slideElements);
-    })();
-  }, [withAbsoluteFontSize, fontSize]);
 
   // ロード時にハッシュが入ってたらそのページにスクロール
   useEffect(() => {
@@ -75,7 +18,7 @@ function App() {
         target.scrollIntoView();
       }
     }
-  }, [slides, writingMode]);
+  }, [writingMode]);
 
   // IntersectionObserverでスクロール位置に応じてページ番号を変更
   useEffect(() => {
@@ -99,20 +42,17 @@ function App() {
     return () => {
       observer.disconnect();
     };
-  }, [slides]);
+  }, []);
 
-  const gotoNextSlide = useCallback(
-    function gotoNextSlide(forward = true) {
-      const currentHash = location.hash;
-      const currentIndex = parseInt(currentHash.replace("#page-", ""));
-      const nextIndex = forward ? currentIndex + 1 : currentIndex - 1;
-      if (nextIndex < 0 || nextIndex >= slides.length) {
-        return;
-      }
-      location.hash = `#page-${nextIndex}`;
-    },
-    [slides],
-  );
+  function gotoNextSlide(forward = true) {
+    const currentHash = location.hash;
+    const currentIndex = parseInt(currentHash.replace("#page-", ""));
+    const nextIndex = forward ? currentIndex + 1 : currentIndex - 1;
+    if (nextIndex < 0 || nextIndex >= slidesContent.length) {
+      return;
+    }
+    location.hash = `#page-${nextIndex}`;
+  }
 
   // keydownイベントでページ送り
   useEffect(() => {
@@ -158,7 +98,37 @@ function App() {
       style={{ "--slide-writing-mode": writingMode }}
     >
       <div className="slides" ref={slidesRef}>
-        {slides}
+        {slidesContent.map((content, index) => {
+          if (typeof content === "string") {
+            return (
+              <div className="slide" id={`page-${index}`} key={index}>
+                <div
+                  className="slide-content"
+                  style={
+                    withAbsoluteFontSize ? { fontSize: `${fontSize}px` } : {}
+                  }
+                  dangerouslySetInnerHTML={{
+                    __html: content,
+                  }}
+                />
+              </div>
+            );
+          } else {
+            const SlideComponent = content;
+            return (
+              <div className="slide" id={`page-${index}`} key={index}>
+                <div
+                  className="slide-content"
+                  style={
+                    withAbsoluteFontSize ? { fontSize: `${fontSize}px` } : {}
+                  }
+                >
+                  <SlideComponent />
+                </div>
+              </div>
+            );
+          }
+        })}
       </div>
       <div className="controls">
         <div>

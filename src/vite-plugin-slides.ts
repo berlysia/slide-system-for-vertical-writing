@@ -4,6 +4,18 @@ import * as path from "node:path";
 import { mkdirSync, copyFileSync, readdirSync } from "node:fs";
 import prompts from "prompts";
 import { compile } from "@mdx-js/mdx";
+import { unified } from "unified";
+import remarkParse from "remark-parse";
+import remarkRehype from "remark-rehype";
+import rehypeStringify from "rehype-stringify";
+
+async function processMarkdown(markdown: string) {
+  return await unified()
+    .use(remarkParse)
+    .use(remarkRehype, { allowDangerousHtml: true })
+    .use(rehypeStringify, { allowDangerousHtml: true })
+    .process(markdown);
+}
 
 export interface SlidesPluginOptions {
   /** Directory containing the slides, relative to project root */
@@ -129,7 +141,10 @@ export default async function slidesPlugin(
             },
           );
           const slides = replaced.split(/^\s*(?:---|\*\*\*|___)\s*$/m);
-          return `export default ${JSON.stringify(slides)}`;
+          const processedSlides = await Promise.all(
+            slides.map((slide) => processMarkdown(slide)),
+          );
+          return `export default ${JSON.stringify(processedSlides.map((p) => p.value))}`;
         }
 
         const slides = content.split(/^\s*(?:---|\*\*\*|___)\s*$/m);

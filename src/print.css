@@ -42,7 +42,6 @@ body {
   transform: none !important;
 
   font-size: var(--print-slide-font-size);
-  font-family: "Noto Sans JP", sans-serif;
 }
 
 /* Hide controls in print */

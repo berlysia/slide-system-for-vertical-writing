@@ -2,20 +2,10 @@
   box-sizing: border-box;
 }
 
-/* Base font configuration */
-@font-face {
-  font-family: "Noto Sans JP";
-  src:
-    local("Noto Sans JP"),
-    url("https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@600&display=swap");
-  font-weight: 600;
-  font-style: normal;
-  font-display: block;
-}
-
 html {
-  font-family: "Noto Sans JP", sans-serif;
-  font-optical-sizing: auto;
+  font-family:
+    "Hiragino Sans", "Hiragino Kaku Gothic ProN", "Yu Gothic", "Noto Sans JP",
+    sans-serif;
   font-weight: 600;
   font-style: normal;
 
@@ -24,6 +14,12 @@ html {
   text-size-adjust: 100%;
 
   text-rendering: geometricPrecision;
+}
+
+code {
+  font-family: "Noto Sans Mono", monospace;
+  font-optical-sizing: auto;
+  font-variation-settings: "wdth" 100;
 }
 
 @property --slide-writing-mode {

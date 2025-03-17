@@ -26,6 +26,6 @@ export default defineConfig(async () => ({
   ],
   optimizeDeps: {
     // Add virtual module to optimization
-    include: ["virtual:slides.jsx"],
+    include: ["virtual:slides.js", "virtual:slides-page-*.js"],
   },
 }));

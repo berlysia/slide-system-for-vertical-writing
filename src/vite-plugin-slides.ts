@@ -1,4 +1,4 @@
-import { Plugin, ViteDevServer } from "vite";
+import type { Plugin, ViteDevServer, ResolvedConfig } from "vite";
 import * as fs from "node:fs";
 import * as path from "node:path";
 import { mkdirSync, copyFileSync, readdirSync } from "node:fs";
@@ -79,9 +79,13 @@ export default async function slidesPlugin(
       mergedOptions.collection ||
       (await selectSlideCollection(mergedOptions.slidesDir)),
   };
+  let base: string;
   let compiledSlides: string[] = [];
   return {
     name: "vite-plugin-slides",
+    configResolved(config: ResolvedConfig) {
+      base = config.base;
+    },
     enforce: "pre",
     resolveId(id: string) {
       if (id === virtualFileId) {
@@ -137,7 +141,7 @@ export default async function slidesPlugin(
           const replaced = content.replace(
             /<img\s+([^>]*src="(@slide\/[^"]+)"[^>]*)>/g,
             (_, attributes, src) => {
-              return `<img ${attributes.replace(src, `/${config.slidesDir}/${config.collection}/images/${src.slice(7)}`)}>`;
+              return `<img ${attributes.replace(src, `${base}slide-assets/images/${src.slice(7)}`)}>`;
             },
           );
           const slides = replaced.split(/^\s*(?:---|\*\*\*|___)\s*$/m);
@@ -223,7 +227,7 @@ export default async function slidesPlugin(
       );
       const targetImagesDir = path.resolve(
         currentDir,
-        `../public/${config.slidesDir}/${config.collection}/images`,
+        `../public/slide-assets/images`,
       );
 
       if (fs.existsSync(sourceImagesDir)) {

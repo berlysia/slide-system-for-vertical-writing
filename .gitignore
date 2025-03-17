@@ -23,6 +23,6 @@ dist-ssr
 *.sln
 *.sw?
 
-public/slides
+public/slide-assets
 test-results
 playwright-report

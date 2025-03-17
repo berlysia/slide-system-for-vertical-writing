@@ -8,10 +8,12 @@ import { unified } from "unified";
 import remarkParse from "remark-parse";
 import remarkRehype from "remark-rehype";
 import rehypeStringify from "rehype-stringify";
+import remarkSlideImages from "./remark-slide-images";
 
-async function processMarkdown(markdown: string) {
+async function processMarkdown(markdown: string, base: string) {
   return await unified()
     .use(remarkParse)
+    .use(remarkSlideImages, { base })
     .use(remarkRehype, { allowDangerousHtml: true })
     .use(rehypeStringify, { allowDangerousHtml: true })
     .process(markdown);
@@ -138,15 +140,9 @@ export default async function slidesPlugin(
         const content = fs.readFileSync(filePath, "utf-8");
 
         if (!isMdx) {
-          const replaced = content.replace(
-            /<img\s+([^>]*src="(@slide\/[^"]+)"[^>]*)>/g,
-            (_, attributes, src) => {
-              return `<img ${attributes.replace(src, `${base}slide-assets/images/${src.slice(7)}`)}>`;
-            },
-          );
-          const slides = replaced.split(/^\s*(?:---|\*\*\*|___)\s*$/m);
+          const slides = content.split(/^\s*(?:---|\*\*\*|___)\s*$/m);
           const processedSlides = await Promise.all(
-            slides.map((slide) => processMarkdown(slide)),
+            slides.map((slide) => processMarkdown(slide, base)),
           );
           return `export default ${JSON.stringify(processedSlides.map((p) => p.value))}`;
         }
@@ -158,6 +154,7 @@ export default async function slidesPlugin(
             const result = await compile(slideContent, {
               outputFormat: "program",
               development: false,
+              remarkPlugins: [[remarkSlideImages, { base }]],
             });
             return result.value as string;
           }),

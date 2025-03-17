@@ -21,6 +21,9 @@ function App() {
 
   const [slides, setSlides] = useState<JSX.Element[]>([]);
 
+  const [fontSize, setFontSize] = useState(42);
+  const [withAbsoluteFontSize, setWithAbsoluteFontSize] = useState(false);
+
   useEffect(() => {
     (async () => {
       const contents = slidesContent;
@@ -33,6 +36,9 @@ function App() {
               <div className="slide" id={`page-${index}`} key={index}>
                 <div
                   className="slide-content"
+                  style={
+                    withAbsoluteFontSize ? { fontSize: `${fontSize}px` } : {}
+                  }
                   dangerouslySetInnerHTML={{
                     __html: processed.value as string,
                   }}
@@ -43,7 +49,12 @@ function App() {
             const SlideComponent = content;
             return (
               <div className="slide" id={`page-${index}`} key={index}>
-                <div className="slide-content">
+                <div
+                  className="slide-content"
+                  style={
+                    withAbsoluteFontSize ? { fontSize: `${fontSize}px` } : {}
+                  }
+                >
                   <SlideComponent />
                 </div>
               </div>
@@ -53,7 +64,7 @@ function App() {
       );
       setSlides(slideElements);
     })();
-  }, []);
+  }, [withAbsoluteFontSize, fontSize]);
 
   // ロード時にハッシュが入ってたらそのページにスクロール
   useEffect(() => {
@@ -150,20 +161,53 @@ function App() {
         {slides}
       </div>
       <div className="controls">
-        <button type="button" onClick={() => gotoNextSlide()}>
-          次
-        </button>
-        <button
-          type="button"
-          onClick={() =>
-            setWritingMode(isVertical ? "horizontal-tb" : "vertical-rl")
-          }
-        >
-          {isVertical ? "横書きにする" : "縦書きにする"}
-        </button>
-        <button type="button" onClick={() => gotoNextSlide(false)}>
-          前
-        </button>
+        <div>
+          <button type="button" onClick={() => gotoNextSlide()}>
+            次
+          </button>
+          <button
+            type="button"
+            onClick={() =>
+              setWritingMode(isVertical ? "horizontal-tb" : "vertical-rl")
+            }
+          >
+            {isVertical ? "横書きにする" : "縦書きにする"}
+          </button>
+          <button type="button" onClick={() => gotoNextSlide(false)}>
+            前
+          </button>
+        </div>
+        <div>
+          <label>
+            フォントサイズを指定する
+            <input
+              type="checkbox"
+              checked={withAbsoluteFontSize}
+              onChange={(e) => setWithAbsoluteFontSize(e.target.checked)}
+            />
+          </label>
+          <label>
+            <input
+              type="number"
+              min="10"
+              step="1"
+              value={fontSize}
+              onChange={(e) => {
+                const t = Number(e.target.value);
+                setFontSize(Number.isNaN(t) || t < 4 ? 4 : t);
+              }}
+              onKeyDown={(e) => {
+                if (e.key === "ArrowUp" || e.key === "ArrowDown") {
+                  e.stopPropagation();
+                }
+              }}
+              style={{
+                inlineSize: `${fontSize.toString(10).length / 2 + 2}em`,
+              }}
+            />
+            px
+          </label>
+        </div>
       </div>
     </div>
   );

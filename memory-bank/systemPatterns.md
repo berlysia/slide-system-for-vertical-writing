@@ -50,6 +50,11 @@ flowchart TD
 - CSS custom properties for dynamic writing modes
 - Scroll snap for slide navigation
 - IntersectionObserver for slide tracking
+- Visual regression testing patterns:
+  - Browser-specific test cases
+  - Viewport size variations
+  - Print mode verification
+  - Layout transition testing
 
 ## File Structure
 
@@ -72,21 +77,31 @@ slides/               # Content directory (not part of core system)
    - CSS custom properties for global mode control
    - Container queries for layout adaptation
    - Print-specific writing mode handling
+   - Visual transition handling
+   - Browser-specific optimizations
 
-2. **Navigation System**
+2. **Testing Infrastructure**
+
+   - Playwright for visual regression
+   - Multiple browser engine support
+   - GitHub Actions integration
+   - Screenshot comparison workflow
+   - Browser-specific test cases
+
+3. **Navigation System**
 
    - Scroll snap for slide alignment
    - IntersectionObserver for slide tracking
    - Keyboard and wheel event handling
    - Hash-based slide identification
 
-3. **Layout Components**
+4. **Layout Components**
 
    - Modular layout system
    - Writing mode responsive designs
    - Print-optimized structure
 
-4. **CSS Architecture**
+5. **CSS Architecture**
    - Container queries for dimensions
    - Custom properties for dynamic modes
    - Print media optimization

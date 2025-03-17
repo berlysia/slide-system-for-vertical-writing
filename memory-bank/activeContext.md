@@ -2,7 +2,12 @@
 
 ## Current Focus
 
-Development of a slide presentation system focusing on CSS behavior with vertical writing.
+Development and testing of a slide presentation system with vertical writing support, focusing on:
+
+- Visual regression testing across browsers
+- Print media optimization
+- Writing mode transitions
+- Cross-browser compatibility
 
 ## Recent Changes
 
@@ -48,8 +53,13 @@ Development of a slide presentation system focusing on CSS behavior with vertica
 
 ### Technical
 
-- Container queries for responsive slide layouts
-- CSS custom properties for writing mode control
+- Container query implementations for responsive layouts
+- CSS custom properties for writing mode state management
+- Visual regression testing strategy:
+  - Multiple browser engines (Chromium, Firefox, WebKit)
+  - Various viewport sizes and orientations
+  - Writing mode state verification
+  - Print mode layout verification
 - Print media optimization:
   - Cross-browser behavior differences in print mode
   - Specific issues with empty pages in Chrome

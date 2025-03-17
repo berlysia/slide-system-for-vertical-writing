@@ -10,6 +10,7 @@ This is a presentation project focused on CSS vertical writing behavior. The pro
 - Component implementations belong in `/src/slide-components`
 - CSS files are module-based and co-located with components
 - Asset files (images, etc.) go in slide-specific `/images` directories
+- Test files go in `/tests` directory with respective snapshots
 
 ## Code Style Preferences
 
@@ -23,8 +24,10 @@ This is a presentation project focused on CSS vertical writing behavior. The pro
 1. Create/update slide content in MDX
 2. Implement necessary components
 3. Add required styles
-4. Test in development server
-5. Document changes in appropriate memory bank files
+4. Run visual regression tests
+5. Test in development server
+6. Update test snapshots if necessary
+7. Document changes in appropriate memory bank files
 
 ## Critical Paths
 
@@ -83,15 +86,25 @@ This is a presentation project focused on CSS vertical writing behavior. The pro
    - Container type: size
    - Width/height calculations
    - Writing mode adaptations
+   - Print media behavior
 
-2. CSS Layout Patterns:
+2. Visual Testing Strategy:
+
+   - Browser-specific test cases
+   - Standard viewport size (1920x1080)
+   - Print mode verification
+   - Layout transition testing
+   - GitHub Actions integration
+   - Screenshot comparison workflow
+
+3. CSS Layout Patterns:
 
    - Logical properties for consistency
    - Container-relative units (cqw/cqh)
    - Aspect ratio maintenance
    - Overflow handling
 
-3. Event Handling:
+4. Event Handling:
    - Keyboard navigation (arrows, space)
    - Wheel event control
    - Writing mode toggle

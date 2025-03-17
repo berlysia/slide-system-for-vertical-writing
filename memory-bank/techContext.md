@@ -122,11 +122,21 @@ tests/
   - Never blindly update snapshots
   - Document expected visual differences
   - Consider browser-specific behaviors
+  - Responsive design verification
+  - Print media layout testing
+
+- Test environment setup:
+
+  - Chromium, Firefox, and WebKit engines
+  - Standard viewport size (1920x1080)
+  - Writing mode state tracking
+  - Print media emulation
+  - Automated CI/CD pipeline
 
 - Test coverage:
 
   - Layout changes in different modes
-  - Multiple viewport sizes (1920x1080, 1280x720)
+  - Standard viewport size testing (1920x1080)
   - Writing mode state verification
   - Print media layout verification
   - Responsive design behavior
@@ -143,8 +153,14 @@ tests/
 - Browser-specific considerations:
 
   - Chrome: Empty pages issue with `page-break-after`
-  - Safari: Inconsistent page size handling
-  - Firefox: Viewport rendering differences
+  - Safari:
+    - Inconsistent page size handling
+    - Font rotation quirks
+    - Container query behavior differences
+  - Firefox:
+    - Viewport rendering differences
+    - Writing mode transition handling
+    - Print layout edge cases
 
 - Print media emulation:
 

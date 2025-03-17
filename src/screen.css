@@ -1,0 +1,92 @@
+html,
+body,
+#root {
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+}
+
+.slides-container {
+  container-name: slide-container;
+  container-type: size;
+
+  width: 100dvw;
+  height: calc(max(90dvh, 100dvw * 9 / 16) + 0px);
+
+  position: relative;
+
+  overflow: hidden;
+
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+
+  border: 1px solid #ccc;
+  background-color: #eee;
+}
+
+.slides {
+  /* コンテナーの中を最大に占める16/9の寸法 */
+  width: 100cqw;
+  height: 100cqh;
+  /* Fix container query precision issues */
+  max-width: calc(100cqh * 16 / 9 - 0.01px);
+  max-height: calc(100cqw * 9 / 16 - 0.01px);
+
+  scroll-snap-type: both mandatory;
+  writing-mode: var(--slide-writing-mode);
+
+  overflow: hidden;
+
+  @container style(--slide-writing-mode: vertical-rl) or style(--slide-writing-mode: vertical-lr) or style(--slide-writing-mode: sideways-rl) or style(--slide-writing-mode: sideways-lr) {
+    overflow-x: scroll;
+  }
+  @container style(--slide-writing-mode: horizontal-tb) or style(--slide-writing-mode: unset) {
+    overflow-y: scroll;
+  }
+}
+
+/* 各スライドのスタイル */
+.slide {
+  width: 100cqw;
+  height: 100cqh;
+  /* Fix container query precision issues */
+  max-width: calc(100cqh * 16 / 9 - 0.01px);
+  max-height: calc(100cqw * 9 / 16 - 0.01px);
+
+  container-name: slide-container;
+  container-type: size;
+
+  background-color: white;
+
+  scroll-snap-align: center;
+  /* Safari and Firefox need this for consistent scroll snapping */
+  scroll-snap-stop: always;
+
+  overflow: hidden;
+
+  /* Support for older versions of Firefox */
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+  /* Support for older versions of Safari */
+  -webkit-overflow-scrolling: touch;
+}
+
+/* Hide scrollbars consistently across browsers */
+.slide::-webkit-scrollbar {
+  display: none;
+}
+
+.controls {
+  position: fixed;
+
+  left: 40px;
+  bottom: 40px;
+}
+
+.slide-content {
+  font-size: 5cqh;
+}

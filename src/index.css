@@ -5,22 +5,16 @@
 /* Base font configuration */
 @font-face {
   font-family: "Noto Sans JP";
-  src: local("Noto Sans JP"), url("https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@600&display=swap");
-  font-weight: 600;
-  font-style: normal;
-  font-display: block;
-}
-
-@font-face {
-  font-family: "Noto Sans JP Print";
-  src: local("Noto Sans JP");
+  src:
+    local("Noto Sans JP"),
+    url("https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@600&display=swap");
   font-weight: 600;
   font-style: normal;
   font-display: block;
 }
 
 html {
-  font-family: "Noto Sans JP", "Noto Sans JP Print", sans-serif;
+  font-family: "Noto Sans JP", sans-serif;
   font-optical-sizing: auto;
   font-weight: 600;
   font-style: normal;
@@ -29,41 +23,18 @@ html {
   text-rendering: optimizeLegibility;
 }
 
-@media print {
-  html {
-    font-family: "Noto Sans JP Print", "Noto Sans JP", sans-serif;
-  }
-}
-
 /* Base layout */
 html,
 body,
 #root {
-  margin: 0;
-  padding: 0;
-  height: 100%;
-  width: 100%;
-  overflow: hidden;
   /* Prevent text size adjustments */
   text-size-adjust: none;
   -webkit-text-size-adjust: none;
+
   /* Improve text rendering */
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   text-rendering: optimizeLegibility;
-}
-
-/* Print-specific root styles */
-@media print {
-  html,
-  body,
-  #root {
-    height: 100% !important;
-    width: 100% !important;
-    margin: 0 !important;
-    padding: 0 !important;
-    overflow: visible !important;
-  }
 }
 
 @property --slide-writing-mode {
@@ -75,15 +46,14 @@ body,
 .slide-content {
   width: 100%;
   height: 100%;
-  /* font-size: 5cqh; */
-  font-size: 41px;
-  
-  
+
+  position: relative;
+
   .wrapper {
     width: 100%;
     height: 100%;
     padding: 1.2em 1.2em;
-    
+
     position: relative;
 
     &.center {

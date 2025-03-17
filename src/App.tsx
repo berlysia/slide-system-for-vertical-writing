@@ -1,5 +1,4 @@
 import { useState, useRef, JSX, useEffect, useCallback } from "react";
-import "./App.css";
 import { unified } from "unified";
 import remarkParse from "remark-parse";
 import remarkRehype from "remark-rehype";

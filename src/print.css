@@ -1,0 +1,104 @@
+@property --print-slide-width {
+  syntax: "<length>";
+  inherits: true;
+  initial-value: 0px;
+}
+
+@property --print-slide-height {
+  syntax: "<length>";
+  inherits: true;
+  initial-value: 0px;
+}
+
+:root {
+  --print-page-width: 1920px;
+  --print-page-height: 1080px;
+  --print-slide-width: calc(var(--print-page-width) - 0px);
+  --print-slide-height: calc(var(--print-page-height) - 0px);
+  --print-slide-font-size: calc(var(--print-slide-height) / 20);
+}
+
+@page {
+  /* Base page size for all browsers */
+  size: var(--print-page-width) var(--print-page-height);
+  margin: 0;
+}
+
+html,
+body,
+#root {
+  width: 100% !important;
+  height: 100% !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  overflow: visible !important;
+}
+
+body {
+  /* Ensure print colors are accurate */
+  -webkit-print-color-adjust: exact;
+  print-color-adjust: exact;
+  /* Prevent any scaling */
+  transform: none !important;
+
+  font-size: var(--print-slide-font-size);
+  font-family: "Noto Sans JP", sans-serif;
+}
+
+/* Hide controls in print */
+.controls {
+  display: none !important;
+}
+
+/* Slides wrapper adjustments */
+.slides {
+  position: relative;
+}
+
+.slide {
+  /* Size and position */
+  width: 100%;
+  height: 100%;
+
+  /* Writing mode handling */
+  writing-mode: var(--slide-writing-mode);
+
+  /* Force page breaks */
+  page-break-after: always;
+  break-after: page;
+  page-break-inside: avoid;
+  break-inside: avoid;
+
+  /* Print layout */
+  position: relative;
+  overflow: hidden;
+  /* Ensure text remains crisp in print */
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  /* Maintain font settings */
+}
+
+/* Writing mode toggle specific styles */
+.wm-toggle {
+  writing-mode: inherit !important;
+}
+
+.debug {
+  background-color: orange;
+
+  #root {
+    background-color: yellow;
+  }
+
+  .slides-container {
+    background-color: green;
+  }
+
+  .slide {
+    background-color: red;
+  }
+
+  .slide-content {
+    background-color: pink;
+  }
+}

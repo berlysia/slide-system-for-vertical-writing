@@ -38,7 +38,7 @@
   <div style="flex: 1; border: 8px solid orange; display: flex; flex-direction: column; justify-content: center; align-items: center;">
    <div>
 
-      （本文 flex: 1; ）
+（本文 flex: 1; ）
 
   </div>
 
@@ -126,13 +126,13 @@
   <div style="writing-mode: vertical-rl; flex: 1; border: 8px solid orange; display: flex; flex-direction: column; justify-content: center; align-items: center;">
    <div>
 
-      なんだか
+なんだか
 
-      ふんいきのある
+ふんいきのある
 
-      良い感じの
+良い感じの
 
-      テキスト
+テキスト
 
   </div>
 

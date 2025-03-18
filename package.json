@@ -6,6 +6,11 @@
     ".": "./cli.js",
     "vertical-slides": "./cli.js"
   },
+  "files": [
+    "cli.js",
+    "scripts",
+    "src"
+  ],
   "scripts": {
     "dev": "vite",
     "build": "tsc -b && vite build",

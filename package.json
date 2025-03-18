@@ -3,7 +3,6 @@
   "version": "0.0.1",
   "type": "module",
   "bin": {
-    ".": "./cli.js",
     "vertical-slides": "./cli.js"
   },
   "files": [

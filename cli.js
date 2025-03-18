@@ -23,7 +23,7 @@ async function runBuildAll() {
     "scripts",
     "build-pages.ts",
   );
-  const command = `node ${buildPagesPath}`;
+  const command = `npx tsx ${buildPagesPath}`;
 
   try {
     execSync(command, { stdio: "inherit" });

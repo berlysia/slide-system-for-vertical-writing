@@ -20,21 +20,74 @@ async function processMarkdown(markdown: string, base: string) {
 }
 
 export interface SlidesPluginOptions {
-  /** Directory containing the slides, relative to project root */
+  /** Directory containing the slides (absolute path) */
   slidesDir?: string;
   /** Name of the slides collection */
   collection?: string;
 }
 
+/**
+ * Logger for slides functionality
+ */
+const logger = {
+  info: (message: string) => console.log(`[Slides] ${message}`),
+  error: (message: string, error?: Error) => {
+    console.error(`[Slides] ${message}`);
+    if (error) {
+      console.error(error);
+    }
+  },
+  warn: (message: string) => console.warn(`[Slides] ${message}`),
+};
+
+/**
+ * Validates slides directory
+ * @throws {Error} If directory is invalid or inaccessible
+ */
+function validateSlidesDir(dir: string): void {
+  if (!fs.existsSync(dir)) {
+    throw new Error(`External slides directory not found: ${dir}`);
+  }
+  try {
+    fs.accessSync(dir, fs.constants.R_OK);
+  } catch (err) {
+    throw new Error(`No read permission for external slides directory: ${dir}`);
+  }
+}
+
+/**
+ * Sets up file watcher for slides directory
+ */
+function watchSlidesDir(dir: string, server: ViteDevServer): () => void {
+  logger.info(`Watching slides directory: ${dir}`);
+
+  const watcher = fs.watch(dir, { recursive: true }, (_eventType, filename) => {
+    if (filename) {
+      server.ws.send({
+        type: "full-reload",
+        path: "*",
+      });
+      logger.info(`File changed: ${filename}`);
+    }
+  });
+
+  watcher.on("error", (error) => {
+    logger.error(`Watch error:`, error);
+  });
+
+  return () => {
+    watcher.close();
+    logger.info("Stopped watching slides directory");
+  };
+}
+
 const defaultOptions: Required<SlidesPluginOptions> = {
-  slidesDir: "slides",
+  slidesDir: path.resolve(process.cwd(), "slides"),
   collection: "",
 };
 
 async function selectSlideCollection(slidesDir: string): Promise<string> {
-  const currentFilePath = import.meta.filename;
-  const currentDir = path.dirname(currentFilePath);
-  const slidesPath = path.resolve(currentDir, `../${slidesDir}`);
+  const slidesPath = path.resolve(slidesDir);
 
   if (!fs.existsSync(slidesPath)) {
     throw new Error(`Slides directory not found: ${slidesPath}`);
@@ -75,6 +128,18 @@ export default async function slidesPlugin(
   options: SlidesPluginOptions = {},
 ): Promise<Plugin> {
   const mergedOptions = { ...defaultOptions, ...options };
+
+  // Validate slides directory
+  try {
+    validateSlidesDir(mergedOptions.slidesDir);
+    logger.info(`Using slides directory: ${mergedOptions.slidesDir}`);
+  } catch (error) {
+    if (error instanceof Error) {
+      logger.error("Failed to validate slides directory", error);
+    }
+    throw error;
+  }
+
   const config = {
     ...mergedOptions,
     collection:
@@ -110,17 +175,16 @@ export default async function slidesPlugin(
     },
     async load(id: string) {
       if (id === "\0" + virtualFileId) {
-        const currentFilePath = import.meta.filename;
-        const currentDir = path.dirname(currentFilePath);
-
-        // Try MDX first, then fallback to MD
+        // Look for slides in the configured directory
         const mdxPath = path.resolve(
-          currentDir,
-          `../${config.slidesDir}/${config.collection}/index.mdx`,
+          config.slidesDir,
+          config.collection,
+          "index.mdx",
         );
         const mdPath = path.resolve(
-          currentDir,
-          `../${config.slidesDir}/${config.collection}/index.md`,
+          config.slidesDir,
+          config.collection,
+          "index.md",
         );
 
         let filePath: string | undefined;
@@ -129,11 +193,12 @@ export default async function slidesPlugin(
         if (fs.existsSync(mdxPath)) {
           filePath = mdxPath;
           isMdx = true;
+          logger.info("Using MDX slides");
         } else if (fs.existsSync(mdPath)) {
           filePath = mdPath;
-        }
-
-        if (!filePath) {
+          logger.info("Using MD slides");
+        } else {
+          logger.warn("No slide files found");
           return "export default []";
         }
 
@@ -216,66 +281,73 @@ export default async function slidesPlugin(
       }
     },
     async buildStart() {
-      const currentFilePath = import.meta.filename;
-      const currentDir = path.dirname(currentFilePath);
-      const sourceImagesDir = path.resolve(
-        currentDir,
-        `../${config.slidesDir}/${config.collection}/images`,
-      );
       const targetImagesDir = path.resolve(
-        currentDir,
-        `../public/slide-assets/images`,
+        process.cwd(),
+        "public/slide-assets/images",
+      );
+      const sourceImagesDir = path.resolve(
+        config.slidesDir,
+        config.collection,
+        "images",
       );
 
+      // Copy images from slides directory
       if (fs.existsSync(sourceImagesDir)) {
-        // Create target directory if it doesn't exist
-        mkdirSync(targetImagesDir, { recursive: true });
+        try {
+          // Create target directory if it doesn't exist
+          mkdirSync(targetImagesDir, { recursive: true });
 
-        // Copy all files from source to target
-        const imageFiles = readdirSync(sourceImagesDir);
-        for (const file of imageFiles) {
-          const sourcePath = path.join(sourceImagesDir, file);
-          const targetPath = path.join(targetImagesDir, file);
-          copyFileSync(sourcePath, targetPath);
+          // Copy all files from source to target
+          const imageFiles = readdirSync(sourceImagesDir);
+          for (const file of imageFiles) {
+            const sourcePath = path.join(sourceImagesDir, file);
+            const targetPath = path.join(targetImagesDir, file);
+            copyFileSync(sourcePath, targetPath);
+          }
+          logger.info("Copied slide images successfully");
+        } catch (error) {
+          if (error instanceof Error) {
+            logger.error("Failed to copy slide images", error);
+          }
+          throw error;
         }
       }
     },
 
     configureServer(server: ViteDevServer) {
-      server.watcher.add(
-        `**/${config.slidesDir}/${config.collection}/**/*.{md,mdx}`,
-      );
+      // Watch slides directory
+      const watcher = watchSlidesDir(config.slidesDir, server);
+
+      const reloadModule = () => {
+        const mod = server.moduleGraph.getModuleById("\0" + virtualFileId);
+        const pageMods = compiledSlides.map((_, i) =>
+          server.moduleGraph.getModuleById(virtualFilePageId(i)),
+        );
+        if (mod) {
+          server.moduleGraph.invalidateModule(mod);
+        }
+        for (const pageMod of pageMods) {
+          if (pageMod) {
+            server.moduleGraph.invalidateModule(pageMod);
+          }
+        }
+        server.ws.send({
+          type: "full-reload",
+          path: "*",
+        });
+      };
+
       server.watcher.on("change", (path: string) => {
-        if (
-          path.match(
-            new RegExp(
-              `\\/${config.slidesDir}\\/${config.collection}\\/.+\\.(?:md|mdx)$`,
-            ),
-          )
-        ) {
-          // Invalidate the module to trigger HMR
-          const mod = server.moduleGraph.getModuleById("\0" + virtualFileId);
-          const pageMods = compiledSlides.map((_, i) =>
-            server.moduleGraph.getModuleById(virtualFilePageId(i)),
-          );
-          if (mod) {
-            server.moduleGraph.invalidateModule(mod);
-            server.ws.send({
-              type: "full-reload",
-              path: "*",
-            });
-          }
-          for (const pageMod of pageMods) {
-            if (pageMod) {
-              server.moduleGraph.invalidateModule(pageMod);
-            }
-          }
-          server.ws.send({
-            type: "full-reload",
-            path: "*",
-          });
+        if (path.includes(config.slidesDir) && /\.(?:md|mdx)$/.test(path)) {
+          logger.info(`Slide file changed: ${path}`);
+          reloadModule();
         }
       });
+
+      // Cleanup on server shutdown
+      return () => {
+        watcher();
+      };
     },
   };
 }

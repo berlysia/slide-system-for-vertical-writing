@@ -52,7 +52,7 @@ jobs:
       - name: Build and deploy slides
         run: |
           chmod +x scripts/build-pages.ts
-          SLIDE_PATH="${{ github.event.inputs.slide }}" node scripts/build-pages.ts
+          SLIDE_NAME="${{ github.event.inputs.slide }}" node scripts/build-pages.ts
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:

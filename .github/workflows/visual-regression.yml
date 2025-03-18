@@ -23,7 +23,7 @@ jobs:
       - name: Install Playwright
         run: pnpm exec playwright install --with-deps
       - name: Build application
-        run: SLIDE_PATH=vrt-test pnpm build
+        run: SLIDE_NAME=vrt-test pnpm build
       - name: Run Visual Regression Tests
         run: pnpm exec playwright test
       - name: Upload test results

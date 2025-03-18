@@ -1,12 +1,9 @@
-#!/usr/bin/env node
-
 import { execSync } from "child_process";
 import { existsSync } from "fs";
 import { mkdir, readdir, stat, cp, writeFile } from "fs/promises";
 import { join, resolve } from "path";
 
 const defaultSlidesDir = resolve(import.meta.dirname, "..", "slides");
-const slidesDir = process.env.SLIDES_DIR;
 const pagesDir = "pages";
 
 // Ensure pages directory exists
@@ -44,8 +41,8 @@ ${slides}
   await writeFile(join(pagesDir, "index.html"), html);
 }
 
-async function main() {
-  const resolvedSlidesDir = slidesDir ?? defaultSlidesDir;
+export async function buildPages(options: { slidesDir?: string } = {}) {
+  const resolvedSlidesDir = options.slidesDir ?? defaultSlidesDir;
   // Build all slides
   if (!existsSync(resolvedSlidesDir)) {
     throw new Error(`Slides directory not found (tried: ${resolvedSlidesDir})`);
@@ -68,4 +65,10 @@ async function main() {
   await createIndexPage(slides);
 }
 
-await main();
+// CLI entry point
+if (import.meta.url === `file://${process.argv[1]}`) {
+  buildPages({ slidesDir: process.env.SLIDES_DIR }).catch((error) => {
+    console.error(error);
+    process.exit(1);
+  });
+}

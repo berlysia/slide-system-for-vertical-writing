@@ -27,3 +27,4 @@ public/slide-assets
 test-results
 playwright-report
 pages
+scripts/*.js

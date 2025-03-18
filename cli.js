@@ -1,42 +1,31 @@
 #!/usr/bin/env node
 
-import { resolve } from "path";
 import { execSync } from "child_process";
 import { parseArgs } from "node:util";
 
 async function runDev() {
-  const { createServer } = await import("vite");
-  const server = await createServer({
-    configFile: resolve(import.meta.dirname, "vite.config.ts"),
-    root: import.meta.dirname,
-    mode: "development",
-  });
-
-  await server.listen();
-  console.log(`Development server running at ${server.resolvedUrls?.local[0]}`);
-  console.log("Press Ctrl+C to exit");
-}
-
-async function runBuildAll() {
-  const buildPagesPath = resolve(
-    import.meta.dirname,
-    "scripts",
-    "build-pages.ts",
-  );
-  const command = `npx tsx ${buildPagesPath}`;
-
   try {
-    execSync(command, { stdio: "inherit" });
+    execSync("npx vite", { stdio: "inherit" });
   } catch (error) {
     console.error("Error during build:", error);
     process.exit(1);
   }
-  console.log("Build completed successfully");
+}
+
+async function runBuildAll() {
+  const { buildPages } = await import("./scripts/build-pages.js");
+  try {
+    await buildPages({ slidesDir: process.env.SLIDES_DIR });
+    console.log("Build completed successfully");
+  } catch (error) {
+    console.error("Error during build:", error);
+    process.exit(1);
+  }
 }
 
 async function runBuild() {
   try {
-    execSync("pnpm run build", { stdio: "inherit" });
+    execSync("npx vite build", { stdio: "inherit" });
   } catch (error) {
     console.error("Error during build:", error);
     process.exit(1);

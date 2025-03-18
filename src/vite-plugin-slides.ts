@@ -127,12 +127,12 @@ const nullPrefixedVirtualFilePageIdPattern =
 export default async function slidesPlugin(
   options: SlidesPluginOptions = {},
 ): Promise<Plugin> {
-  const mergedOptions = { ...defaultOptions, ...options };
+  const config = { ...defaultOptions, ...options };
 
   // Validate slides directory
   try {
-    validateSlidesDir(mergedOptions.slidesDir);
-    logger.info(`Using slides directory: ${mergedOptions.slidesDir}`);
+    validateSlidesDir(config.slidesDir);
+    logger.info(`Using slides directory: ${config.slidesDir}`);
   } catch (error) {
     if (error instanceof Error) {
       logger.error("Failed to validate slides directory", error);
@@ -140,12 +140,13 @@ export default async function slidesPlugin(
     throw error;
   }
 
-  const config = {
-    ...mergedOptions,
-    collection:
-      mergedOptions.collection ||
-      (await selectSlideCollection(mergedOptions.slidesDir)),
-  };
+  if (config.collection) {
+    logger.info(`Using slide: ${config.collection}`);
+  } else {
+    logger.info("No slide collection specified, prompting for selection");
+    config.collection = await selectSlideCollection(config.slidesDir);
+  }
+
   let base: string;
   let compiledSlides: string[] = [];
   return {

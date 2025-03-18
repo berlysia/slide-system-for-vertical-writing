@@ -12,7 +12,7 @@ A React-based slides application built with Vite that supports markdown-based pr
 ## Usage
 
 ```bash
-vertical-slides <command> [options]
+npx @berlysia/vertical-writing-slide-system <command> [options]
 ```
 
 ### Commands
@@ -31,14 +31,35 @@ vertical-slides <command> [options]
 
 ```bash
 # Start development server for slides in './my-slides' directory
-vertical-slides dev --dir ./my-slides
+npx @berlysia/vertical-writing-slide-system dev --dir ./my-slides
 
 # Build all slides from specified directory
-vertical-slides buildAll --dir ./my-slides
+npx @berlysia/vertical-writing-slide-system buildAll --dir ./my-slides
 
 # Build specific slides with custom name
-vertical-slides build --dir ./my-slides --name custom-presentation
+npx @berlysia/vertical-writing-slide-system build --dir ./my-slides --name custom-presentation
 ```
+
+## Slides Directory Structure
+
+Your slides directory should follow this structure:
+
+```
+slides/
+  ├── presentation-name/     # Directory for each presentation
+  │   ├── index.mdx         # Main presentation content
+  │   └── images/           # (Optional) Images used in the presentation
+  │       └── example.png
+  └── another-presentation/
+      ├── index.mdx
+      └── images/
+          └── slide-image.png
+```
+
+Each presentation should be in its own directory containing:
+
+- `index.mdx`: The main presentation file with your MDX content. \*.md is also fine
+- `images/`: (Optional) Directory containing images used in the presentation
 
 For development documentation, see [DEVELOPMENT.md](DEVELOPMENT.md).
 

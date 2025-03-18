@@ -6,13 +6,18 @@
     "vertical-slides": "./cli.js"
   },
   "files": [
+    "package.json",
+    "vite.config.ts",
+    "tsconfig.json",
+    "tsconfig.*.json", 
     "cli.js",
-    "scripts",
+    "scripts/build-pages.js",
     "src"
   ],
   "scripts": {
     "dev": "vite",
     "build": "tsc -b && vite build",
+    "build:cli": "tsc --project tsconfig.cli.json",
     "lint": "eslint .",
     "preview": "vite preview",
     "build:pages": "node scripts/build-pages.ts",

@@ -1,9 +1,12 @@
 {
-  "name": "sandbox-css-behavior-with-vertical-writing",
+  "name": "@berlysia/vertical-writing-slide-system",
   "private": true,
   "version": "0.0.0",
   "type": "module",
-  "bin": "./cli.js",
+  "bin": {
+    ".": "./cli.js",
+    "vertical-slides": "./cli.js"
+  },
   "scripts": {
     "dev": "vite",
     "build": "tsc -b && vite build",

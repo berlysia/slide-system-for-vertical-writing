@@ -90,6 +90,11 @@ async function main() {
   const [command] = positionals;
 
   if (!command || !commands[command]) {
+    if (!command) {
+      console.error("Error: Command is required");
+    } else if (!commands[command]) {
+      console.error(`Error: Unknown command "${command}"`);
+    }
     printUsage();
     process.exit(1);
   }

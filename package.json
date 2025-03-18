@@ -1,6 +1,6 @@
 {
   "name": "@berlysia/vertical-writing-slide-system",
-  "version": "0.0.3",
+  "version": "0.0.4",
   "type": "module",
   "bin": {
     "vertical-slides": "./cli.js"
@@ -9,7 +9,7 @@
     "package.json",
     "vite.config.ts",
     "tsconfig.json",
-    "tsconfig.*.json", 
+    "tsconfig.*.json",
     "cli.js",
     "scripts/build-pages.js",
     "src"

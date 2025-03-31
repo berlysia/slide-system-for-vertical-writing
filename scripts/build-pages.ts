@@ -1,13 +1,5 @@
 import { existsSync } from "fs";
-import {
-  mkdir,
-  readdir,
-  stat,
-  cp,
-  writeFile,
-  mkdtemp,
-  rmdir,
-} from "fs/promises";
+import { mkdir, readdir, stat, cp, writeFile, mkdtemp, rm } from "fs/promises";
 import { join, resolve } from "path";
 import { build } from "vite";
 
@@ -15,7 +7,7 @@ const defaultSlidesDir = resolve(import.meta.dirname, "..", "slides");
 const pagesDir = "pages";
 
 // Ensure pages directory exists
-await rmdir(pagesDir, { recursive: true });
+await rm(pagesDir, { recursive: true });
 await mkdir(pagesDir, { recursive: true });
 
 async function buildSlide(slideName: string) {
@@ -32,7 +24,7 @@ async function buildSlide(slideName: string) {
   const slideOutputDir = join(pagesDir, slideName);
   await mkdir(slideOutputDir, { recursive: true });
   await cp(tmpDir, slideOutputDir, { recursive: true });
-  await rmdir(tmpDir, { recursive: true });
+  await rm(tmpDir, { recursive: true });
 }
 
 async function createIndexPage(slideNames: string[]) {

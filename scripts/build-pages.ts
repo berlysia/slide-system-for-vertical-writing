@@ -1,7 +1,7 @@
-import { execSync } from "child_process";
 import { existsSync } from "fs";
 import { mkdir, readdir, stat, cp, writeFile } from "fs/promises";
 import { join, resolve } from "path";
+import { build } from "vite";
 
 const defaultSlidesDir = resolve(import.meta.dirname, "..", "slides");
 const pagesDir = "pages";
@@ -12,7 +12,10 @@ await mkdir(pagesDir, { recursive: true });
 async function buildSlide(slideName: string) {
   console.log(`Building ${slideName}...`);
   process.env.SLIDE_NAME = slideName;
-  execSync("pnpm run build", { stdio: "inherit" });
+  await build({
+    root: resolve(import.meta.dirname, ".."),
+    configFile: "vite.config.ts",
+  });
 
   const slideOutputDir = join(pagesDir, slideName);
   await mkdir(slideOutputDir, { recursive: true });

@@ -25,7 +25,10 @@ async function runBuildAll() {
 
 async function runBuild() {
   try {
-    execSync("npx vite build", { stdio: "inherit" });
+    await build({
+      root: import.meta.dirname,
+      configFile: "vite.config.ts",
+    });
   } catch (error) {
     console.error("Error during build:", error);
     process.exit(1);

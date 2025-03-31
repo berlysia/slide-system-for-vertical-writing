@@ -1,6 +1,9 @@
 #!/usr/bin/env node
+// @ts-check
 
 import { execSync } from "child_process";
+import { mkdir, mkdtemp, cp, rm } from "node:fs/promises";
+import { resolve } from "node:path";
 import { parseArgs } from "node:util";
 import { build } from "vite";
 
@@ -27,8 +30,10 @@ async function runBuildAll() {
 async function runBuild() {
   try {
     await build({
-      root: import.meta.dirname,
-      configFile: "vite.config.ts",
+      root: resolve(import.meta.dirname),
+      build: {
+        outDir: resolve("pages"),
+      },
     });
   } catch (error) {
     console.error("Error during build:", error);

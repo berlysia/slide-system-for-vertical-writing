@@ -2,6 +2,7 @@
 
 import { execSync } from "child_process";
 import { parseArgs } from "node:util";
+import { build } from "vite";
 
 async function runDev() {
   try {

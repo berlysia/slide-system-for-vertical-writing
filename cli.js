@@ -30,9 +30,10 @@ async function runBuildAll() {
 async function runBuild() {
   try {
     await build({
-      root: resolve(import.meta.dirname),
+      root: process.cwd(),
+      configFile: resolve(import.meta.dirname, "vite.config.ts"),
       build: {
-        outDir: resolve("pages"),
+        outDir: resolve(process.cwd(), "pages"),
       },
     });
   } catch (error) {

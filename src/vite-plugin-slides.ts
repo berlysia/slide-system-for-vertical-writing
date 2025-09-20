@@ -50,7 +50,7 @@ function validateSlidesDir(dir: string): void {
   }
   try {
     fs.accessSync(dir, fs.constants.R_OK);
-  } catch (err) {
+  } catch {
     throw new Error(`No read permission for external slides directory: ${dir}`);
   }
 }
@@ -149,10 +149,12 @@ export default async function slidesPlugin(
 
   let base: string;
   let compiledSlides: string[] = [];
+  let resolvedConfig: ResolvedConfig;
   return {
     name: "vite-plugin-slides",
     configResolved(config: ResolvedConfig) {
       base = config.base;
+      resolvedConfig = config;
     },
     enforce: "pre",
     resolveId(id: string) {
@@ -282,35 +284,132 @@ export default async function slidesPlugin(
       }
     },
     async buildStart() {
-      const targetImagesDir = path.resolve(
-        process.cwd(),
-        "public/slide-assets/images",
-      );
-      const sourceImagesDir = path.resolve(
-        config.slidesDir,
-        config.collection,
-        "images",
-      );
+      // Ensure index.html exists in consumer project
+      const consumerIndexHtml = path.resolve(resolvedConfig.root, "index.html");
 
-      // Copy images from slides directory
-      if (fs.existsSync(sourceImagesDir)) {
+      if (!fs.existsSync(consumerIndexHtml)) {
         try {
-          // Create target directory if it doesn't exist
-          mkdirSync(targetImagesDir, { recursive: true });
+          // Create a consumer-specific index.html that points to library sources
+          const libraryRoot = path.resolve(import.meta.dirname, "..");
+          const relativePath = path.relative(resolvedConfig.root, libraryRoot);
 
-          // Copy all files from source to target
-          const imageFiles = readdirSync(sourceImagesDir);
-          for (const file of imageFiles) {
-            const sourcePath = path.join(sourceImagesDir, file);
-            const targetPath = path.join(targetImagesDir, file);
-            copyFileSync(sourcePath, targetPath);
-          }
-          logger.info("Copied slide images successfully");
+          const indexHtmlContent = `<!doctype html>
+<html lang="ja">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/${relativePath}/vite.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Vertical Writing Slides</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP&family=Noto+Sans+Mono:wght@100..900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/${relativePath}/src/index.css" />
+    <link rel="stylesheet" media="screen" href="/${relativePath}/src/screen.css" />
+    <link rel="stylesheet" media="print" href="/${relativePath}/src/print.css" />
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/${relativePath}/src/main.tsx"></script>
+  </body>
+</html>`;
+
+          fs.writeFileSync(consumerIndexHtml, indexHtmlContent);
+          logger.info("Generated index.html for consumer project");
         } catch (error) {
           if (error instanceof Error) {
-            logger.error("Failed to copy slide images", error);
+            logger.error("Failed to create index.html", error);
           }
           throw error;
+        }
+      }
+
+      // Handle images during dev mode
+      if (resolvedConfig.command === "serve") {
+        const targetImagesDir = path.resolve(
+          resolvedConfig.root,
+          "public/slide-assets/images",
+        );
+        const sourceImagesDir = path.resolve(
+          config.slidesDir,
+          config.collection,
+          "images",
+        );
+
+        // Copy images from slides directory
+        if (fs.existsSync(sourceImagesDir)) {
+          try {
+            // Create target directory if it doesn't exist
+            mkdirSync(targetImagesDir, { recursive: true });
+
+            // Copy all files from source to target
+            const imageFiles = readdirSync(sourceImagesDir);
+            for (const file of imageFiles) {
+              const sourcePath = path.join(sourceImagesDir, file);
+              const targetPath = path.join(targetImagesDir, file);
+              copyFileSync(sourcePath, targetPath);
+            }
+            logger.info("Copied slide images successfully");
+          } catch (error) {
+            if (error instanceof Error) {
+              logger.error("Failed to copy slide images", error);
+            }
+            throw error;
+          }
+        }
+      }
+    },
+
+    generateBundle() {
+      // Handle images during build mode
+      if (resolvedConfig.command === "build") {
+        const sourceImagesDir = path.resolve(
+          config.slidesDir,
+          config.collection,
+          "images",
+        );
+
+        if (fs.existsSync(sourceImagesDir)) {
+          try {
+            const imageFiles = readdirSync(sourceImagesDir);
+            logger.info(
+              `Processing ${imageFiles.length} image files from ${sourceImagesDir}`,
+            );
+
+            let processedCount = 0;
+            for (const file of imageFiles) {
+              const sourcePath = path.join(sourceImagesDir, file);
+              try {
+                const imageContent = fs.readFileSync(sourcePath);
+
+                // Add image files to the bundle
+                this.emitFile({
+                  type: "asset",
+                  fileName: `slide-assets/images/${file}`,
+                  source: imageContent,
+                });
+                processedCount++;
+                logger.info(`Added image to bundle: ${file}`);
+              } catch (fileError) {
+                logger.error(
+                  `Failed to process image file: ${file}`,
+                  fileError instanceof Error
+                    ? fileError
+                    : new Error(String(fileError)),
+                );
+                // Continue processing other files instead of failing completely
+              }
+            }
+            logger.info(
+              `Successfully added ${processedCount}/${imageFiles.length} slide images to bundle`,
+            );
+          } catch (error) {
+            if (error instanceof Error) {
+              logger.error("Failed to read slide images directory", error);
+            }
+            throw error;
+          }
+        } else {
+          logger.warn(`No images directory found at: ${sourceImagesDir}`);
         }
       }
     },

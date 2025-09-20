@@ -9,7 +9,10 @@ export default defineConfig(async () => {
     base: "./",
     resolve: {
       alias: {
-        "@components": "/src/slide-components",
+        "@components": path.resolve(
+          import.meta.dirname,
+          "src/slide-components",
+        ),
       },
     },
     plugins: [

@@ -1,0 +1,25 @@
+/* Markdownスライド用テストスタイル */
+.slide h1 {
+  color: #dc2626;
+  border-bottom: 4px solid #fecaca;
+  padding-bottom: 0.75rem;
+}
+
+.slide h2 {
+  color: #7c3aed;
+  border-bottom: 2px solid #ddd6fe;
+  padding-bottom: 0.5rem;
+}
+
+.slide ul {
+  background: linear-gradient(135deg, #fef3c7 0%, #fed7aa 100%);
+  padding: 1.5rem;
+  border-radius: 12px;
+  border-left: 6px solid #f59e0b;
+  margin: 1rem 0;
+}
+
+.slide li {
+  color: #92400e;
+  font-weight: 500;
+}

@@ -12,8 +12,8 @@ body,
   container-name: slide-container;
   container-type: size;
 
-  width: 100dvw;
-  height: calc(max(90dvh, 100dvw * 9 / 16) + 0px);
+  width: 100%;
+  height: 100%;
 
   position: relative;
 

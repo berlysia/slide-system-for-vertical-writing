@@ -423,7 +423,7 @@ export default async function slidesPlugin(
 
         // Return as a module with CSS injection
         return `
-            ${slideComponentsFilenames.map((filename) => `import * as ${filenameToComponentName(filename)} from '@components/${filename}';`).join("\n")}
+            ${slideComponentsFilenames.map((filename) => `import * as ${filenameToComponentName(filename)} from '${slideComponentsDir}/${filename}';`).join("\n")}
 
             const SlideComponents = {${slideComponentsFilenames.map((filename) => `...${filenameToComponentName(filename)}`).join(", ")}};
 

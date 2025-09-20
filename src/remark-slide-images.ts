@@ -44,7 +44,7 @@ const remarkSlideImages: Plugin<[RemarkSlideImagesOptions], Root> = (
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const htmlNode = node as any;
         const value = htmlNode.value as string;
-        if (value.startsWith("<img")) {
+        if (value.includes("<img")) {
           htmlNode.value = value.replace(
             /<img\s+([^>]*src="(@slide\/[^"]+)"[^>]*)>/g,
             (_, attributes, src) => {

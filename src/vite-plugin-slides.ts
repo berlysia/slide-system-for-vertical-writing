@@ -55,32 +55,6 @@ function validateSlidesDir(dir: string): void {
   }
 }
 
-/**
- * Sets up file watcher for slides directory
- */
-function watchSlidesDir(dir: string, server: ViteDevServer): () => void {
-  logger.info(`Watching slides directory: ${dir}`);
-
-  const watcher = fs.watch(dir, { recursive: true }, (_eventType, filename) => {
-    if (filename) {
-      server.ws.send({
-        type: "full-reload",
-        path: "*",
-      });
-      logger.info(`File changed: ${filename}`);
-    }
-  });
-
-  watcher.on("error", (error) => {
-    logger.error(`Watch error:`, error);
-  });
-
-  return () => {
-    watcher.close();
-    logger.info("Stopped watching slides directory");
-  };
-}
-
 const defaultOptions: Required<SlidesPluginOptions> = {
   slidesDir: path.resolve(process.cwd(), "slides"),
   collection: "",
@@ -430,9 +404,6 @@ export default async function slidesPlugin(
     },
 
     configureServer(server: ViteDevServer) {
-      // Watch slides directory
-      const watcher = watchSlidesDir(config.slidesDir, server);
-
       const reloadModule = () => {
         const mod = server.moduleGraph.getModuleById("\0" + virtualFileId);
         const pageMods = compiledSlides.map((_, i) =>
@@ -452,16 +423,61 @@ export default async function slidesPlugin(
         });
       };
 
-      server.watcher.on("change", (path: string) => {
-        if (path.includes(config.slidesDir) && /\.(?:md|mdx)$/.test(path)) {
-          logger.info(`Slide file changed: ${path}`);
+      // Use Vite's built-in watcher for better compatibility
+      server.watcher.on("change", (filePath: string) => {
+        // Convert to absolute path for comparison
+        const absolutePath = path.resolve(resolvedConfig.root, filePath);
+        const absoluteSlidesDir = path.resolve(
+          resolvedConfig.root,
+          config.slidesDir,
+        );
+
+        if (
+          absolutePath.includes(absoluteSlidesDir) &&
+          /\.(?:md|mdx)$/.test(absolutePath)
+        ) {
+          logger.info(`Slide file changed: ${absolutePath}`);
           reloadModule();
         }
       });
 
-      // Cleanup on server shutdown
+      // Also watch for new files
+      server.watcher.on("add", (filePath: string) => {
+        const absolutePath = path.resolve(resolvedConfig.root, filePath);
+        const absoluteSlidesDir = path.resolve(
+          resolvedConfig.root,
+          config.slidesDir,
+        );
+
+        if (
+          absolutePath.includes(absoluteSlidesDir) &&
+          /\.(?:md|mdx)$/.test(absolutePath)
+        ) {
+          logger.info(`Slide file added: ${absolutePath}`);
+          reloadModule();
+        }
+      });
+
+      // Watch for deleted files
+      server.watcher.on("unlink", (filePath: string) => {
+        const absolutePath = path.resolve(resolvedConfig.root, filePath);
+        const absoluteSlidesDir = path.resolve(
+          resolvedConfig.root,
+          config.slidesDir,
+        );
+
+        if (
+          absolutePath.includes(absoluteSlidesDir) &&
+          /\.(?:md|mdx)$/.test(absolutePath)
+        ) {
+          logger.info(`Slide file deleted: ${absolutePath}`);
+          reloadModule();
+        }
+      });
+
+      // Cleanup function (no additional watchers to clean up now)
       return () => {
-        watcher();
+        // No additional cleanup needed since we're using Vite's built-in watcher
       };
     },
   };

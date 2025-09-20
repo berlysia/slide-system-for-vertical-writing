@@ -47,7 +47,7 @@ async function runDev() {
     const projectPath = process.cwd();
 
     const server = await createServer({
-      root: libPath, // Use library as root for assets
+      root: projectPath, // Use project as root for proper file watching
       configFile: resolve(libPath, "vite.config.ts"),
       server: {
         fs: {

@@ -534,14 +534,18 @@ export default async function slidesPlugin(
         });
       };
 
+      // Explicitly add external slides directory to watcher
+      const absoluteSlidesDir = path.resolve(config.slidesDir);
+      if (fs.existsSync(absoluteSlidesDir)) {
+        server.watcher.add(absoluteSlidesDir);
+        logger.info(`Added slides directory to watcher: ${absoluteSlidesDir}`);
+      }
+
       // Use Vite's built-in watcher for better compatibility
       server.watcher.on("change", (filePath: string) => {
-        // Convert to absolute path for comparison
-        const absolutePath = path.resolve(resolvedConfig.root, filePath);
-        const absoluteSlidesDir = path.resolve(
-          resolvedConfig.root,
-          config.slidesDir,
-        );
+        // filePath is already absolute when coming from watcher
+        const absolutePath = path.resolve(filePath);
+        const absoluteSlidesDir = path.resolve(config.slidesDir);
 
         if (
           absolutePath.includes(absoluteSlidesDir) &&
@@ -554,11 +558,9 @@ export default async function slidesPlugin(
 
       // Also watch for new files
       server.watcher.on("add", (filePath: string) => {
-        const absolutePath = path.resolve(resolvedConfig.root, filePath);
-        const absoluteSlidesDir = path.resolve(
-          resolvedConfig.root,
-          config.slidesDir,
-        );
+        // filePath is already absolute when coming from watcher
+        const absolutePath = path.resolve(filePath);
+        const absoluteSlidesDir = path.resolve(config.slidesDir);
 
         if (
           absolutePath.includes(absoluteSlidesDir) &&
@@ -571,11 +573,9 @@ export default async function slidesPlugin(
 
       // Watch for deleted files
       server.watcher.on("unlink", (filePath: string) => {
-        const absolutePath = path.resolve(resolvedConfig.root, filePath);
-        const absoluteSlidesDir = path.resolve(
-          resolvedConfig.root,
-          config.slidesDir,
-        );
+        // filePath is already absolute when coming from watcher
+        const absolutePath = path.resolve(filePath);
+        const absoluteSlidesDir = path.resolve(config.slidesDir);
 
         if (
           absolutePath.includes(absoluteSlidesDir) &&

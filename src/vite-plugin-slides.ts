@@ -322,7 +322,7 @@ export default async function slidesPlugin(
       }
     },
 
-    generateBundle(options, bundle) {
+    generateBundle(_options, bundle) {
       // Generate HTML file if none exists in consumer project
       const consumerIndexHtml = path.resolve(resolvedConfig.root, "index.html");
 

@@ -11,12 +11,21 @@ importers:
       '@emotion/react':
         specifier: ^11.14.0
         version: 11.14.0(@types/react@19.0.10)(react@19.0.0)
+      '@mdx-js/mdx':
+        specifier: ^3.1.0
+        version: 3.1.0(acorn@8.14.1)
       '@mdx-js/react':
         specifier: ^3.1.0
         version: 3.1.0(@types/react@19.0.10)(react@19.0.0)
       '@mdx-js/rollup':
         specifier: ^3.1.0
         version: 3.1.0(acorn@8.14.1)(rollup@4.34.9)
+      '@vitejs/plugin-react-swc':
+        specifier: ^3.5.0
+        version: 3.8.0(vite@6.2.1(@types/node@22.13.9)(tsx@4.19.3))
+      prompts:
+        specifier: ^2.4.2
+        version: 2.4.2
       react:
         specifier: ^19.0.0
         version: 19.0.0
@@ -51,9 +60,6 @@ importers:
       '@eslint/js':
         specifier: ^9.21.0
         version: 9.21.0
-      '@mdx-js/mdx':
-        specifier: ^3.1.0
-        version: 3.1.0(acorn@8.14.1)
       '@playwright/experimental-ct-react':
         specifier: ^1.51.0
         version: 1.51.0(@types/node@22.13.9)(tsx@4.19.3)(vite@6.2.1(@types/node@22.13.9)(tsx@4.19.3))
@@ -78,9 +84,6 @@ importers:
       '@types/react-dom':
         specifier: ^19.0.4
         version: 19.0.4(@types/react@19.0.10)
-      '@vitejs/plugin-react-swc':
-        specifier: ^3.5.0
-        version: 3.8.0(vite@6.2.1(@types/node@22.13.9)(tsx@4.19.3))
       eslint:
         specifier: ^9.21.0
         version: 9.21.0
@@ -99,9 +102,6 @@ importers:
       prettier:
         specifier: ^3.5.3
         version: 3.5.3
-      prompts:
-        specifier: ^2.4.2
-        version: 2.4.2
       typescript:
         specifier: ~5.8.2
         version: 5.8.2
@@ -111,6 +111,12 @@ importers:
       unist-util-visit:
         specifier: ^5.0.0
         version: 5.0.0
+
+  packages/example-slides:
+    devDependencies:
+      '@berlysia/vertical-writing-slide-system':
+        specifier: workspace:*
+        version: link:../..
 
 packages:
 

@@ -1,61 +1,22 @@
 #!/usr/bin/env node
 // @ts-check
 
-import { writeFile, access } from "node:fs/promises";
 import { resolve } from "node:path";
 import { parseArgs } from "node:util";
 import { build, createServer } from "vite";
-
-async function ensureIndexHtml() {
-  const indexHtmlPath = resolve(process.cwd(), "index.html");
-  try {
-    await access(indexHtmlPath);
-    // index.html already exists
-    return;
-  } catch {
-    // index.html doesn't exist, create it
-    // Use absolute paths from the library location for external projects
-    const libPath = import.meta.dirname;
-    const libSrcPath = resolve(libPath, "src");
-
-    // Convert to relative paths from project root that Vite can resolve
-    const relativeSrcPath = `/@fs${libSrcPath}`;
-
-    const indexHtmlContent = `<!doctype html>
-<html lang="ja">
-  <head>
-    <meta charset="UTF-8" />
-    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Vertical Writing Slides</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP&family=Noto+Sans+Mono:wght@100..900&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="${relativeSrcPath}/index.css" />
-    <link rel="stylesheet" media="screen" href="${relativeSrcPath}/screen.css" />
-    <link rel="stylesheet" media="print" href="${relativeSrcPath}/print.css" />
-  </head>
-  <body>
-    <div id="root"></div>
-    <script type="module" src="${relativeSrcPath}/main.tsx"></script>
-  </body>
-</html>`;
-
-    await writeFile(indexHtmlPath, indexHtmlContent);
-    console.log("Generated index.html for external project");
-  }
-}
 
 async function runDev() {
   try {
     const libPath = import.meta.dirname;
     const projectPath = process.cwd();
 
-    // Ensure index.html exists for external projects
-    await ensureIndexHtml();
+    // Set environment variables for external project
+    if (!process.env.SLIDES_DIR) {
+      process.env.SLIDES_DIR = resolve(projectPath, "./slides");
+    }
 
     const server = await createServer({
-      root: projectPath, // Use project as root for proper file watching
+      root: libPath, // Use library as root to serve its index.html
       configFile: resolve(libPath, "vite.config.ts"),
       server: {
         fs: {
@@ -98,13 +59,20 @@ async function runBuildAll() {
 
 async function runBuild() {
   try {
+    const projectPath = process.cwd();
+
+    // Set environment variables for external project
+    if (!process.env.SLIDES_DIR) {
+      process.env.SLIDES_DIR = resolve(projectPath, "./slides");
+    }
+
     await build({
-      root: process.cwd(),
+      root: import.meta.dirname, // Use library as root like dev mode
       configFile: resolve(import.meta.dirname, "vite.config.ts"),
       build: {
         outDir: resolve(process.cwd(), "pages"),
         rollupOptions: {
-          input: resolve(import.meta.dirname, "src/main.tsx"),
+          input: resolve(import.meta.dirname, "index.html"),
           output: {
             assetFileNames: "assets/[name]-[hash][extname]",
           },

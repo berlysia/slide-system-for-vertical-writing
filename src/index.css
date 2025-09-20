@@ -57,6 +57,16 @@ code {
     max-block-size: 100%;
     max-inline-size: 100%;
     overflow: hidden;
+    block-size: 100%;
+    inline-size: 100%;
+  }
+
+  .header-and-content > *:not(:first-child) {
+    flex: 1;
+    @container style(--slide-writing-mode: horizontal-tb) or style(--slide-writing-mode: unset) {
+      min-block-size: 0;
+      overflow-block: auto;
+    }
   }
 
   h1 {

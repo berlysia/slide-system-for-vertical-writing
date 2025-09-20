@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useCallback } from "react";
 import slidesContent from "virtual:slides.js";
 
 function App() {
@@ -69,7 +69,7 @@ function App() {
     };
   }, []);
 
-  function gotoNextSlide(forward = true) {
+  const gotoNextSlide = useCallback((forward = true) => {
     const currentHash = location.hash;
     const currentIndex = parseInt(currentHash.replace("#page-", ""));
     const nextIndex = forward ? currentIndex + 1 : currentIndex - 1;
@@ -77,7 +77,7 @@ function App() {
       return;
     }
     location.hash = `#page-${nextIndex}`;
-  }
+  }, []);
 
   // keydownイベントでページ送り
   useEffect(() => {

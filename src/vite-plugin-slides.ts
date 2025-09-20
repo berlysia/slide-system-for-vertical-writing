@@ -171,7 +171,7 @@ export default async function slidesPlugin(
         nullPrefixedVirtualFilePageIdPattern.test(id)
       ) {
         return {
-          code: `import React from 'react';\n${code}`,
+          code: `import * as React from 'react';\n${code}`,
           map: null,
         };
       }
@@ -222,6 +222,8 @@ export default async function slidesPlugin(
             const result = await compile(slideContent, {
               outputFormat: "program",
               development: false,
+              jsxImportSource: "react",
+              jsxRuntime: "automatic",
               remarkPlugins: [[remarkSlideImages, { base }]],
             });
             return result.value as string;
@@ -284,45 +286,6 @@ export default async function slidesPlugin(
       }
     },
     async buildStart() {
-      // Ensure index.html exists in consumer project
-      const consumerIndexHtml = path.resolve(resolvedConfig.root, "index.html");
-
-      if (!fs.existsSync(consumerIndexHtml)) {
-        try {
-          // Create a consumer-specific index.html that points to library sources
-          const libraryRoot = path.resolve(import.meta.dirname, "..");
-          const relativePath = path.relative(resolvedConfig.root, libraryRoot);
-
-          const indexHtmlContent = `<!doctype html>
-<html lang="ja">
-  <head>
-    <meta charset="UTF-8" />
-    <link rel="icon" type="image/svg+xml" href="/${relativePath}/vite.svg" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Vertical Writing Slides</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP&family=Noto+Sans+Mono:wght@100..900&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="/${relativePath}/src/index.css" />
-    <link rel="stylesheet" media="screen" href="/${relativePath}/src/screen.css" />
-    <link rel="stylesheet" media="print" href="/${relativePath}/src/print.css" />
-  </head>
-  <body>
-    <div id="root"></div>
-    <script type="module" src="/${relativePath}/src/main.tsx"></script>
-  </body>
-</html>`;
-
-          fs.writeFileSync(consumerIndexHtml, indexHtmlContent);
-          logger.info("Generated index.html for consumer project");
-        } catch (error) {
-          if (error instanceof Error) {
-            logger.error("Failed to create index.html", error);
-          }
-          throw error;
-        }
-      }
-
       // Handle images during dev mode
       if (resolvedConfig.command === "serve") {
         const targetImagesDir = path.resolve(
@@ -359,7 +322,48 @@ export default async function slidesPlugin(
       }
     },
 
-    generateBundle() {
+    generateBundle(options, bundle) {
+      // Generate HTML file if none exists in consumer project
+      const consumerIndexHtml = path.resolve(resolvedConfig.root, "index.html");
+
+      if (!fs.existsSync(consumerIndexHtml)) {
+        // Find the main JS file in the bundle
+        const mainJsFile = Object.keys(bundle).find(
+          (fileName) =>
+            fileName.startsWith("assets/main-") && fileName.endsWith(".js"),
+        );
+
+        if (!mainJsFile) {
+          logger.error("Could not find main JS file in bundle");
+          return;
+        }
+
+        const virtualIndexHtml = `<!doctype html>
+<html lang="ja">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Vertical Writing Slides</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP&family=Noto+Sans+Mono:wght@100..900&display=swap" rel="stylesheet">
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="./${mainJsFile}"></script>
+  </body>
+</html>`;
+
+        // Emit HTML file as part of the build output
+        this.emitFile({
+          type: "asset",
+          fileName: "index.html",
+          source: virtualIndexHtml,
+        });
+
+        logger.info("Generated index.html for build output");
+      }
+
       // Handle images during build mode
       if (resolvedConfig.command === "build") {
         const sourceImagesDir = path.resolve(

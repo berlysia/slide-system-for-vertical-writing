@@ -34,6 +34,9 @@ async function runBuild() {
       configFile: resolve(import.meta.dirname, "vite.config.ts"),
       build: {
         outDir: resolve(process.cwd(), "pages"),
+        rollupOptions: {
+          input: resolve(import.meta.dirname, "src/main.tsx"),
+        },
       },
     });
   } catch (error) {

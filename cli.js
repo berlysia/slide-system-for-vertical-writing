@@ -1,8 +1,7 @@
 #!/usr/bin/env node
 // @ts-check
 
-import { execSync } from "child_process";
-import { mkdir, mkdtemp, cp, rm, writeFile, access } from "node:fs/promises";
+import { writeFile, access } from "node:fs/promises";
 import { resolve } from "node:path";
 import { parseArgs } from "node:util";
 import { build, createServer } from "vite";
@@ -15,7 +14,13 @@ async function ensureIndexHtml() {
     return;
   } catch {
     // index.html doesn't exist, create it
-    // Use relative paths that Vite can resolve during development
+    // Use absolute paths from the library location for external projects
+    const libPath = import.meta.dirname;
+    const libSrcPath = resolve(libPath, "src");
+
+    // Convert to relative paths from project root that Vite can resolve
+    const relativeSrcPath = `/@fs${libSrcPath}`;
+
     const indexHtmlContent = `<!doctype html>
 <html lang="ja">
   <head>
@@ -26,13 +31,13 @@ async function ensureIndexHtml() {
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP&family=Noto+Sans+Mono:wght@100..900&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="/src/index.css" />
-    <link rel="stylesheet" media="screen" href="/src/screen.css" />
-    <link rel="stylesheet" media="print" href="/src/print.css" />
+    <link rel="stylesheet" href="${relativeSrcPath}/index.css" />
+    <link rel="stylesheet" media="screen" href="${relativeSrcPath}/screen.css" />
+    <link rel="stylesheet" media="print" href="${relativeSrcPath}/print.css" />
   </head>
   <body>
     <div id="root"></div>
-    <script type="module" src="/src/main.tsx"></script>
+    <script type="module" src="${relativeSrcPath}/main.tsx"></script>
   </body>
 </html>`;
 
@@ -45,6 +50,9 @@ async function runDev() {
   try {
     const libPath = import.meta.dirname;
     const projectPath = process.cwd();
+
+    // Ensure index.html exists for external projects
+    await ensureIndexHtml();
 
     const server = await createServer({
       root: projectPath, // Use project as root for proper file watching

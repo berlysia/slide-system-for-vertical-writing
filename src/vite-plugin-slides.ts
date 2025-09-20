@@ -319,7 +319,13 @@ export default async function slidesPlugin(
           slideScripts.external.push(...extractedScripts.external);
           slideScripts.inline.push(...extractedScripts.inline);
 
-          return `export default ${JSON.stringify(processedSlides.map((p) => p.value))}`;
+          // スライド固有のスクリプトを文字列として生成
+          const slideScriptsString = JSON.stringify(slideScripts);
+
+          return `
+            export default ${JSON.stringify(processedSlides.map((p) => p.value))};
+            export const slideScripts = ${slideScriptsString};
+          `;
         }
 
         const slides = content.split(/^\s*(?:---|\*\*\*|___)\s*$/m);

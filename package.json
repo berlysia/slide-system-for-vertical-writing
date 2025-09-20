@@ -1,6 +1,6 @@
 {
   "name": "@berlysia/vertical-writing-slide-system",
-  "version": "0.0.21",
+  "version": "0.0.22",
   "type": "module",
   "bin": {
     "vertical-slides": "./cli.js"

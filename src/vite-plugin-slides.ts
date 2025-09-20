@@ -1,7 +1,8 @@
 import type { Plugin, ViteDevServer, ResolvedConfig } from "vite";
 import * as fs from "node:fs";
 import * as path from "node:path";
-import { mkdirSync, copyFileSync, readdirSync } from "node:fs";
+import { mkdirSync, readdirSync } from "node:fs";
+import { copyFile } from "node:fs/promises";
 import prompts from "prompts";
 import { compile } from "@mdx-js/mdx";
 import { unified } from "unified";
@@ -116,7 +117,7 @@ function loadAdjacentScripts(
         );
       }
     } catch (error) {
-      logger.warn("Failed to parse scripts.json:", error);
+      logger.warn(`Failed to parse scripts.json: ${error}`);
     }
   }
 
@@ -474,15 +475,20 @@ export default async function slidesPlugin(
     async buildStart() {
       // Handle images during dev mode
       if (resolvedConfig.command === "serve") {
-        const targetImagesDir = path.resolve(
-          resolvedConfig.root,
-          "public/slide-assets/images",
-        );
+        // CLIモードでは適切なパスを使用
+        const isExternalCLI = process.cwd() !== resolvedConfig.root;
+        const targetImagesDir = isExternalCLI
+          ? path.resolve(process.cwd(), "public/slide-assets/images")
+          : path.resolve(resolvedConfig.root, "public/slide-assets/images");
+
         const sourceImagesDir = path.resolve(
           config.slidesDir,
           config.collection,
           "images",
         );
+
+        logger.info(`Checking for images in: ${sourceImagesDir}`);
+        logger.info(`Target images directory: ${targetImagesDir}`);
 
         // Copy images from slides directory
         if (fs.existsSync(sourceImagesDir)) {
@@ -490,20 +496,35 @@ export default async function slidesPlugin(
             // Create target directory if it doesn't exist
             mkdirSync(targetImagesDir, { recursive: true });
 
-            // Copy all files from source to target
+            // Copy all files from source to target using async operations
             const imageFiles = readdirSync(sourceImagesDir);
-            for (const file of imageFiles) {
-              const sourcePath = path.join(sourceImagesDir, file);
-              const targetPath = path.join(targetImagesDir, file);
-              copyFileSync(sourcePath, targetPath);
+            logger.info(`Found ${imageFiles.length} image files to copy`);
+
+            if (imageFiles.length > 0) {
+              const copyPromises = imageFiles.map(async (file) => {
+                const sourcePath = path.join(sourceImagesDir, file);
+                const targetPath = path.join(targetImagesDir, file);
+                await copyFile(sourcePath, targetPath);
+                logger.info(`Copied image: ${file}`);
+                return file;
+              });
+
+              // すべての画像コピーが完了するまで待機
+              const copiedFiles = await Promise.all(copyPromises);
+              logger.info(
+                `Successfully copied ${copiedFiles.length} slide images`,
+              );
+            } else {
+              logger.info("No image files found to copy");
             }
-            logger.info("Copied slide images successfully");
           } catch (error) {
             if (error instanceof Error) {
               logger.error("Failed to copy slide images", error);
             }
             throw error;
           }
+        } else {
+          logger.info(`No images directory found at: ${sourceImagesDir}`);
         }
       }
     },

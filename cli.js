@@ -25,9 +25,12 @@ async function runDev() {
             libPath,
             // Allow serving files from the current working directory
             projectPath,
+            // Allow serving public assets from project directory
+            resolve(projectPath, "public"),
           ],
         },
       },
+      publicDir: resolve(projectPath, "public"), // Set public directory to project path
     });
 
     await server.listen();

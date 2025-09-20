@@ -1,0 +1,19 @@
+/* スライド固有のスタイル */
+.slide h1 {
+  color: #2563eb;
+  border-bottom: 3px solid #dbeafe;
+  padding-bottom: 0.5rem;
+}
+
+.slide ul {
+  background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
+  padding: 1rem;
+  border-radius: 8px;
+  border-left: 4px solid #0ea5e9;
+}
+
+.slide img {
+  border: 2px solid #e2e8f0;
+  border-radius: 4px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}

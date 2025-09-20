@@ -40,7 +40,7 @@ code {
   .wrapper {
     width: 100%;
     height: 100%;
-    padding: 1.2rem 1.2rem;
+    padding: 0.833%;
 
     position: relative;
 
@@ -60,20 +60,20 @@ code {
   }
 
   h1 {
-    font-size: 1.4rem;
+    font-size: 1.4em;
     font-weight: bold;
     margin: 0;
-    margin-block-end: 0.2rem;
+    margin-block-end: 0.2em;
   }
   ul,
   ol {
     list-style-position: outside;
     margin: 0;
-    margin-block-end: 1rem;
+    margin-block-end: 1em;
   }
   ul ul,
   ol ol {
-    margin-block-end: 1rem;
+    margin-block-end: 1em;
   }
   ul ul ul,
   ol ol ol {
@@ -81,7 +81,7 @@ code {
   }
   p {
     margin: 0;
-    margin-block-end: 0.5rem;
+    margin-block-end: 0.5em;
   }
 
   .wm-toggle {

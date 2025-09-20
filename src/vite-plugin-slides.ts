@@ -322,7 +322,27 @@ export default async function slidesPlugin(
           // スライド固有のスクリプトを文字列として生成
           const slideScriptsString = JSON.stringify(slideScripts);
 
+          // スライド固有のCSSを文字列として生成
+          const slideStylesString =
+            slideStyles.length > 0
+              ? JSON.stringify(slideStyles.join("\n\n"))
+              : "null";
+
           return `
+            // スライド固有のCSSを注入
+            const slideStyles = ${slideStylesString};
+            if (slideStyles && typeof document !== 'undefined') {
+              const existingStyleElement = document.getElementById('slide-custom-styles');
+              if (existingStyleElement) {
+                existingStyleElement.textContent = slideStyles;
+              } else {
+                const styleElement = document.createElement('style');
+                styleElement.id = 'slide-custom-styles';
+                styleElement.textContent = slideStyles;
+                document.head.appendChild(styleElement);
+              }
+            }
+
             export default ${JSON.stringify(processedSlides.map((p) => p.value))};
             export const slideScripts = ${slideScriptsString};
           `;

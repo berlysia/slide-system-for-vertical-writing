@@ -36,7 +36,12 @@ async function runBuild() {
         outDir: resolve(process.cwd(), "pages"),
         rollupOptions: {
           input: resolve(import.meta.dirname, "src/main.tsx"),
+          output: {
+            assetFileNames: "assets/[name]-[hash][extname]",
+          },
         },
+        cssCodeSplit: true,
+        assetsInlineLimit: 0,
       },
     });
   } catch (error) {

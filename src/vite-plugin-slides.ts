@@ -327,16 +327,26 @@ export default async function slidesPlugin(
       const consumerIndexHtml = path.resolve(resolvedConfig.root, "index.html");
 
       if (!fs.existsSync(consumerIndexHtml)) {
-        // Find the main JS file in the bundle
+        // Find the main JS and CSS files in the bundle
         const mainJsFile = Object.keys(bundle).find(
           (fileName) =>
-            fileName.startsWith("assets/main-") && fileName.endsWith(".js"),
+            fileName.startsWith("assets/") &&
+            fileName.includes("main-") &&
+            fileName.endsWith(".js"),
+        );
+        const mainCssFile = Object.keys(bundle).find(
+          (fileName) =>
+            fileName.startsWith("assets/") && fileName.endsWith(".css"),
         );
 
         if (!mainJsFile) {
           logger.error("Could not find main JS file in bundle");
           return;
         }
+
+        const cssLink = mainCssFile
+          ? `<link rel="stylesheet" href="./${mainCssFile}">`
+          : "<!-- CSS is included in the JS bundle -->";
 
         const virtualIndexHtml = `<!doctype html>
 <html lang="ja">
@@ -347,6 +357,7 @@ export default async function slidesPlugin(
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP&family=Noto+Sans+Mono:wght@100..900&display=swap" rel="stylesheet">
+    ${cssLink}
   </head>
   <body>
     <div id="root"></div>

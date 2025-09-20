@@ -1,3 +1,6 @@
+@import "screen.css" screen;
+@import "print.css" print;
+
 * {
   box-sizing: border-box;
 }

@@ -2,12 +2,37 @@ import { useState, useRef, useEffect } from "react";
 import slidesContent from "virtual:slides.js";
 
 function App() {
-  const [writingMode, setWritingMode] = useState("vertical-rl");
+  const [writingMode, setWritingMode] = useState(() => {
+    const saved = sessionStorage.getItem("slide-writing-mode");
+    return saved ?? "vertical-rl";
+  });
   const isVertical = writingMode !== "horizontal-tb";
   const slidesRef = useRef<HTMLDivElement>(null);
 
-  const [fontSize, setFontSize] = useState(42);
-  const [withAbsoluteFontSize, setWithAbsoluteFontSize] = useState(false);
+  const [fontSize, setFontSize] = useState(() => {
+    const saved = sessionStorage.getItem("slide-font-size");
+    return saved ? Number(saved) : 42;
+  });
+  const [withAbsoluteFontSize, setWithAbsoluteFontSize] = useState(() => {
+    const saved = sessionStorage.getItem("slide-with-absolute-font-size");
+    return saved === "true";
+  });
+
+  // 状態変更時にsessionStorageに保存
+  useEffect(() => {
+    sessionStorage.setItem("slide-writing-mode", writingMode);
+  }, [writingMode]);
+
+  useEffect(() => {
+    sessionStorage.setItem("slide-font-size", fontSize.toString());
+  }, [fontSize]);
+
+  useEffect(() => {
+    sessionStorage.setItem(
+      "slide-with-absolute-font-size",
+      withAbsoluteFontSize.toString(),
+    );
+  }, [withAbsoluteFontSize]);
 
   // ロード時にハッシュが入ってたらそのページにスクロール
   useEffect(() => {

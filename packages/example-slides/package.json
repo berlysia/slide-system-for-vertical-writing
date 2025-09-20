@@ -1,0 +1,14 @@
+{
+  "name": "example-slides",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "devDependencies": {
+    "@berlysia/vertical-writing-slide-system": "workspace:*"
+  },
+  "scripts": {
+    "dev": "vertical-slides dev --dir ./slides",
+    "build": "vertical-slides buildAll --dir ./slides",
+    "build-single": "vertical-slides build --dir ./slides --name sample-presentation"
+  }
+}

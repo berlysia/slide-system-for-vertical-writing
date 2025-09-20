@@ -9,6 +9,7 @@ import remarkParse from "remark-parse";
 import remarkRehype from "remark-rehype";
 import rehypeStringify from "rehype-stringify";
 import remarkSlideImages from "./remark-slide-images";
+import { ScriptManager, type ParsedScript } from "./script-manager";
 import { visit } from "unist-util-visit";
 import type { Node } from "unist";
 import type { Element, Text, ElementContent } from "hast";
@@ -46,14 +47,21 @@ async function processMarkdown(
   markdown: string,
   base: string,
   extractedStyles: string[],
+  extractedScripts: ParsedScript,
 ) {
+  const parsedScripts = ScriptManager.parseScripts(markdown);
+  extractedScripts.external.push(...parsedScripts.external);
+  extractedScripts.inline.push(...parsedScripts.inline);
+
+  const cleanedMarkdown = ScriptManager.removeScriptsFromContent(markdown);
+
   return await unified()
     .use(remarkParse)
     .use(remarkSlideImages, { base })
     .use(remarkRehype, { allowDangerousHtml: true })
     .use(rehypeExtractStyles(extractedStyles))
     .use(rehypeStringify, { allowDangerousHtml: true })
-    .process(markdown);
+    .process(cleanedMarkdown);
 }
 
 /**
@@ -76,6 +84,43 @@ function loadAdjacentCSS(slidesDir: string, collection: string): string[] {
   }
 
   return [];
+}
+
+/**
+ * 隣接スクリプト設定ファイルを検索して読み込み
+ */
+function loadAdjacentScripts(
+  slidesDir: string,
+  collection: string,
+): ParsedScript {
+  const collectionDir = path.resolve(slidesDir, collection);
+  const scriptsPath = path.resolve(collectionDir, "scripts.json");
+
+  const result: ParsedScript = { external: [], inline: [] };
+
+  if (fs.existsSync(scriptsPath)) {
+    try {
+      const scriptsConfig = JSON.parse(fs.readFileSync(scriptsPath, "utf-8"));
+
+      if (scriptsConfig.external && Array.isArray(scriptsConfig.external)) {
+        result.external.push(...scriptsConfig.external);
+        logger.info(
+          `Loaded ${scriptsConfig.external.length} external scripts from scripts.json`,
+        );
+      }
+
+      if (scriptsConfig.inline && Array.isArray(scriptsConfig.inline)) {
+        result.inline.push(...scriptsConfig.inline);
+        logger.info(
+          `Loaded ${scriptsConfig.inline.length} inline scripts from scripts.json`,
+        );
+      }
+    } catch (error) {
+      logger.warn("Failed to parse scripts.json:", error);
+    }
+  }
+
+  return result;
 }
 
 export interface SlidesPluginOptions {
@@ -184,6 +229,7 @@ export default async function slidesPlugin(
   let compiledSlides: string[] = [];
   let resolvedConfig: ResolvedConfig;
   let slideStyles: string[] = [];
+  let slideScripts: ParsedScript = { external: [], inline: [] };
   return {
     name: "vite-plugin-slides",
     configResolved(config: ResolvedConfig) {
@@ -248,25 +294,39 @@ export default async function slidesPlugin(
         );
         slideStyles = [...adjacentStyles];
 
+        // 隣接スクリプト設定ファイルを読み込み
+        const adjacentScripts = loadAdjacentScripts(
+          config.slidesDir,
+          config.collection,
+        );
+        slideScripts = {
+          external: [...adjacentScripts.external],
+          inline: [...adjacentScripts.inline],
+        };
+
         if (!isMdx) {
           const slides = content.split(/^\s*(?:---|\*\*\*|___)\s*$/m);
           const extractedStyles: string[] = [];
+          const extractedScripts: ParsedScript = { external: [], inline: [] };
           const processedSlides = await Promise.all(
             slides.map((slide) =>
-              processMarkdown(slide, base, extractedStyles),
+              processMarkdown(slide, base, extractedStyles, extractedScripts),
             ),
           );
 
-          // 抽出されたスタイルを追加
+          // 抽出されたスタイル・スクリプトを追加
           slideStyles = [...slideStyles, ...extractedStyles];
+          slideScripts.external.push(...extractedScripts.external);
+          slideScripts.inline.push(...extractedScripts.inline);
 
           return `export default ${JSON.stringify(processedSlides.map((p) => p.value))}`;
         }
 
         const slides = content.split(/^\s*(?:---|\*\*\*|___)\s*$/m);
 
-        // MDXにもCSS抽出を適用（MDXの場合はJSXのstyleタグを抽出）
+        // MDXにもCSS・スクリプト抽出を適用
         const extractedStyles: string[] = [];
+        const extractedScripts: ParsedScript = { external: [], inline: [] };
         const processedSlides = await Promise.all(
           slides.map(async (slideContent) => {
             // MDX内のstyleタグを手動で抽出（簡易実装）
@@ -278,8 +338,15 @@ export default async function slidesPlugin(
               }
             }
 
-            // styleタグを削除したコンテンツでMDXコンパイル
-            const cleanedContent = slideContent.replace(styleRegex, "");
+            // MDX内のscriptタグを抽出
+            const parsedScripts = ScriptManager.parseScripts(slideContent);
+            extractedScripts.external.push(...parsedScripts.external);
+            extractedScripts.inline.push(...parsedScripts.inline);
+
+            // style・scriptタグを削除したコンテンツでMDXコンパイル
+            let cleanedContent = slideContent.replace(styleRegex, "");
+            cleanedContent =
+              ScriptManager.removeScriptsFromContent(cleanedContent);
 
             const result = await compile(cleanedContent, {
               outputFormat: "program",
@@ -292,8 +359,10 @@ export default async function slidesPlugin(
           }),
         );
 
-        // 抽出されたスタイルを追加
+        // 抽出されたスタイル・スクリプトを追加
         slideStyles = [...slideStyles, ...extractedStyles];
+        slideScripts.external.push(...extractedScripts.external);
+        slideScripts.inline.push(...extractedScripts.inline);
 
         compiledSlides = processedSlides;
 
@@ -322,6 +391,9 @@ export default async function slidesPlugin(
             ? JSON.stringify(slideStyles.join("\n\n"))
             : "null";
 
+        // スライド固有のスクリプトを文字列として生成
+        const slideScriptsString = JSON.stringify(slideScripts);
+
         // Return as a module with CSS injection
         return `
             ${slideComponentsFilenames.map((filename) => `import * as ${filenameToComponentName(filename)} from '@components/${filename}';`).join("\n")}
@@ -343,6 +415,9 @@ export default async function slidesPlugin(
                 document.head.appendChild(styleElement);
               }
             }
+
+            // スライド固有のスクリプトを外部から利用可能にする
+            export const slideScripts = ${slideScriptsString};
 
             // provide slide components to each slide
             // Wrap SlideN components to provide SlideComponents

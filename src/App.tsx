@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect, useCallback } from "react";
-import slidesContent from "virtual:slides.js";
+import slidesContent, { slideScripts } from "virtual:slides.js";
+import { globalScriptManager } from "./script-manager";
 
 function App() {
   const [writingMode, setWritingMode] = useState(() => {
@@ -33,6 +34,21 @@ function App() {
       withAbsoluteFontSize.toString(),
     );
   }, [withAbsoluteFontSize]);
+
+  // スクリプトの読み込み
+  useEffect(() => {
+    if (
+      slideScripts &&
+      (slideScripts.external.length > 0 || slideScripts.inline.length > 0)
+    ) {
+      console.log("[App] Loading slide scripts:", slideScripts);
+      globalScriptManager.loadScripts(slideScripts).catch(console.error);
+    }
+
+    return () => {
+      // クリーンアップは慎重に行う（全てのスクリプトを削除すると他の機能に影響する場合がある）
+    };
+  }, []);
 
   // ロード時にハッシュが入ってたらそのページにスクロール
   useEffect(() => {

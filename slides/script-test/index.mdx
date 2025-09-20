@@ -1,0 +1,35 @@
+<script
+  src="https://cdn.jsdelivr.net/npm/baseline-status@1/baseline-status.min.js"
+  type="module"
+></script>
+
+<Center>
+  <h1>外部スクリプトテスト</h1>
+  <p>このスライドはbaseline-statusスクリプトを読み込みます</p>
+  <baseline-status feature="css-anchor-positioning"></baseline-status>
+</Center>
+
+---
+
+<Center>
+  <h1>複数の要素</h1>
+  <div>
+    <baseline-status feature="css-grid"></baseline-status>
+    <baseline-status feature="css-custom-properties"></baseline-status>
+    <baseline-status feature="fetch"></baseline-status>
+  </div>
+</Center>
+
+---
+
+<script>
+  console.log('インラインスクリプトがロードされました');
+  console.log('baseline-status の使用例:',
+  document.querySelectorAll('baseline-status'));
+</script>
+
+<Center>
+  <h1>インラインスクリプトテスト</h1>
+  <p>コンソールにメッセージが表示されているはずです</p>
+  <p>DevToolsを開いて確認してください</p>
+</Center>

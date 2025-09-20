@@ -107,6 +107,55 @@ The plugin creates virtual modules:
 - `SLIDE_NAME` - Specific slide collection name
 - `isAI` - Enables AI-specific test mode
 
+## Script Embedding Support
+
+The system supports embedding external scripts and inline scripts in slides:
+
+### Script Tags in MDX/Markdown
+
+Scripts can be embedded directly in slide content:
+
+```mdx
+<script
+  src="https://cdn.jsdelivr.net/npm/baseline-status@1/baseline-status.min.js"
+  type="module"
+></script>
+
+<script>console.log('Inline script executed');</script>
+```
+
+### Configuration File (`scripts.json`)
+
+External scripts can also be configured per slide collection via `scripts.json`:
+
+```json
+{
+  "external": [
+    {
+      "src": "https://cdn.jsdelivr.net/npm/baseline-status@1/baseline-status.min.js",
+      "type": "module"
+    }
+  ],
+  "inline": [
+    {
+      "content": "console.log('Script from configuration');"
+    }
+  ]
+}
+```
+
+### Security Features
+
+- **Domain Whitelist**: Only trusted CDNs (jsdelivr, unpkg, cdnjs, etc.) are allowed
+- **Script Validation**: Basic validation of script attributes and content
+- **Duplicate Prevention**: Scripts are loaded only once per session
+
+### Architecture
+
+- **ScriptManager** (`src/script-manager.ts`): Handles script parsing, validation, and injection
+- **Vite Plugin Integration**: Scripts are extracted during build/dev processing
+- **React Integration**: Scripts are loaded when the App component mounts
+
 ## Writing Modes Support
 
 The application supports both vertical (縦書き) and horizontal writing modes, with special CSS handling in `screen.css` and `print.css`. Browser compatibility is tested across Chrome, Firefox, and Safari.
@@ -151,6 +200,7 @@ Multiple TypeScript configs for different contexts:
 ## External Project Usage
 
 When used from external projects (via npm/pnpm):
+
 - CLI uses `process.cwd()` as root (consumer project) but loads Vite config from library
 - Missing `index.html` files are automatically generated pointing to library sources
 - Image processing works correctly via bundle emission

@@ -6,6 +6,7 @@ A React-based slides application built with Vite that supports markdown-based pr
 
 - Support for both vertical and horizontal writing modes (縦書き・横書き)
 - MDX-based slide creation
+- External script embedding with security validation
 - Print mode support
 - Browser compatibility across Chrome, Firefox, and Safari
 
@@ -60,6 +61,54 @@ Each presentation should be in its own directory containing:
 
 - `index.mdx`: The main presentation file with your MDX content. \*.md is also fine
 - `images/`: (Optional) Directory containing images used in the presentation
+- `scripts.json`: (Optional) Configuration file for external scripts
+- `style.css`: (Optional) Custom CSS styles for the presentation
+
+## Script Embedding
+
+You can embed external scripts in your slides for enhanced functionality:
+
+### Method 1: Direct Script Tags in MDX
+
+```mdx
+<script
+  src="https://cdn.jsdelivr.net/npm/baseline-status@1/baseline-status.min.js"
+  type="module"
+></script>
+
+<script>console.log('Inline script executed');</script>
+
+<Center>
+  <h1>External Script Example</h1>
+  <baseline-status feature="css-grid"></baseline-status>
+</Center>
+```
+
+### Method 2: Configuration File
+
+Create a `scripts.json` file in your slide directory:
+
+```json
+{
+  "external": [
+    {
+      "src": "https://cdn.jsdelivr.net/npm/baseline-status@1/baseline-status.min.js",
+      "type": "module"
+    }
+  ],
+  "inline": [
+    {
+      "content": "console.log('Script from configuration');"
+    }
+  ]
+}
+```
+
+### Security Features
+
+- Only trusted CDNs are allowed (jsdelivr, unpkg, cdnjs, etc.)
+- Scripts are loaded only once per session
+- Basic validation of script attributes and content
 
 For development documentation, see [DEVELOPMENT.md](DEVELOPMENT.md).
 

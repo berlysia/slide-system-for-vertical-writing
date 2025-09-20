@@ -9,14 +9,73 @@ import remarkParse from "remark-parse";
 import remarkRehype from "remark-rehype";
 import rehypeStringify from "rehype-stringify";
 import remarkSlideImages from "./remark-slide-images";
+import { visit } from "unist-util-visit";
+import type { Node } from "unist";
+import type { Element, Text, ElementContent } from "hast";
 
-async function processMarkdown(markdown: string, base: string) {
+/**
+ * CSS抽出用のrehypeプラグイン
+ * HTMLからstyleタグを抽出し、外部で管理
+ */
+function rehypeExtractStyles(extractedStyles: string[]) {
+  return () => {
+    return (tree: Node) => {
+      visit(tree, "element", (node: Element) => {
+        if (node.tagName === "style" && node.children) {
+          // styleタグの内容を抽出
+          const textContent = node.children
+            .filter(
+              (child: ElementContent): child is Text => child.type === "text",
+            )
+            .map((child: Text) => child.value)
+            .join("");
+          if (textContent.trim()) {
+            extractedStyles.push(textContent);
+          }
+          // styleタグをHTMLから削除
+          node.children = [];
+          node.tagName = "div";
+          node.properties = { style: "display: none;" };
+        }
+      });
+    };
+  };
+}
+
+async function processMarkdown(
+  markdown: string,
+  base: string,
+  extractedStyles: string[],
+) {
   return await unified()
     .use(remarkParse)
     .use(remarkSlideImages, { base })
     .use(remarkRehype, { allowDangerousHtml: true })
+    .use(rehypeExtractStyles(extractedStyles))
     .use(rehypeStringify, { allowDangerousHtml: true })
     .process(markdown);
+}
+
+/**
+ * 隣接CSSファイルを検索して読み込み
+ */
+function loadAdjacentCSS(slidesDir: string, collection: string): string[] {
+  const collectionDir = path.resolve(slidesDir, collection);
+  const cssPath = path.resolve(collectionDir, "style.css");
+
+  if (fs.existsSync(cssPath)) {
+    try {
+      const cssContent = fs.readFileSync(cssPath, "utf-8");
+      if (cssContent.trim()) {
+        logger.info("Loaded adjacent CSS file: style.css");
+        return [cssContent];
+      }
+    } catch {
+      logger.warn("Failed to read CSS file: style.css");
+    }
+  }
+
+  return [];
 }
 
 export interface SlidesPluginOptions {
@@ -124,6 +183,7 @@ export default async function slidesPlugin(
   let base: string;
   let compiledSlides: string[] = [];
   let resolvedConfig: ResolvedConfig;
+  let slideStyles: string[] = [];
   return {
     name: "vite-plugin-slides",
     configResolved(config: ResolvedConfig) {
@@ -181,19 +241,47 @@ export default async function slidesPlugin(
 
         const content = fs.readFileSync(filePath, "utf-8");
 
+        // 隣接CSSファイルを読み込み
+        const adjacentStyles = loadAdjacentCSS(
+          config.slidesDir,
+          config.collection,
+        );
+        slideStyles = [...adjacentStyles];
+
         if (!isMdx) {
           const slides = content.split(/^\s*(?:---|\*\*\*|___)\s*$/m);
+          const extractedStyles: string[] = [];
           const processedSlides = await Promise.all(
-            slides.map((slide) => processMarkdown(slide, base)),
+            slides.map((slide) =>
+              processMarkdown(slide, base, extractedStyles),
+            ),
           );
+
+          // 抽出されたスタイルを追加
+          slideStyles = [...slideStyles, ...extractedStyles];
+
           return `export default ${JSON.stringify(processedSlides.map((p) => p.value))}`;
         }
 
         const slides = content.split(/^\s*(?:---|\*\*\*|___)\s*$/m);
 
+        // MDXにもCSS抽出を適用（MDXの場合はJSXのstyleタグを抽出）
+        const extractedStyles: string[] = [];
         const processedSlides = await Promise.all(
           slides.map(async (slideContent) => {
-            const result = await compile(slideContent, {
+            // MDX内のstyleタグを手動で抽出（簡易実装）
+            const styleRegex = /<style[^>]*>([\s\S]*?)<\/style>/gi;
+            let match;
+            while ((match = styleRegex.exec(slideContent)) !== null) {
+              if (match[1].trim()) {
+                extractedStyles.push(match[1].trim());
+              }
+            }
+
+            // styleタグを削除したコンテンツでMDXコンパイル
+            const cleanedContent = slideContent.replace(styleRegex, "");
+
+            const result = await compile(cleanedContent, {
               outputFormat: "program",
               development: false,
               jsxImportSource: "react",
@@ -203,6 +291,9 @@ export default async function slidesPlugin(
             return result.value as string;
           }),
         );
+
+        // 抽出されたスタイルを追加
+        slideStyles = [...slideStyles, ...extractedStyles];
 
         compiledSlides = processedSlides;
 
@@ -225,13 +316,33 @@ export default async function slidesPlugin(
           return filename.replace(/\.[jt]sx?$/, "");
         }
 
-        // Return as a module
+        // スライド固有のCSSを文字列として生成
+        const slideStylesString =
+          slideStyles.length > 0
+            ? JSON.stringify(slideStyles.join("\n\n"))
+            : "null";
+
+        // Return as a module with CSS injection
         return `
             ${slideComponentsFilenames.map((filename) => `import * as ${filenameToComponentName(filename)} from '@components/${filename}';`).join("\n")}
 
             const SlideComponents = {${slideComponentsFilenames.map((filename) => `...${filenameToComponentName(filename)}`).join(", ")}};
 
             ${compiledSlides.map((_, index) => `import Slide${formatSlideIndex(index)} from '${virtualFilePageId(index)}';`).join("\n")}
+
+            // スライド固有のCSSを注入
+            const slideStyles = ${slideStylesString};
+            if (slideStyles && typeof document !== 'undefined') {
+              const existingStyleElement = document.getElementById('slide-custom-styles');
+              if (existingStyleElement) {
+                existingStyleElement.textContent = slideStyles;
+              } else {
+                const styleElement = document.createElement('style');
+                styleElement.id = 'slide-custom-styles';
+                styleElement.textContent = slideStyles;
+                document.head.appendChild(styleElement);
+              }
+            }
 
             // provide slide components to each slide
             // Wrap SlideN components to provide SlideComponents
@@ -434,7 +545,7 @@ export default async function slidesPlugin(
 
         if (
           absolutePath.includes(absoluteSlidesDir) &&
-          /\.(?:md|mdx)$/.test(absolutePath)
+          /\.(?:md|mdx|css)$/.test(absolutePath)
         ) {
           logger.info(`Slide file changed: ${absolutePath}`);
           reloadModule();
@@ -451,7 +562,7 @@ export default async function slidesPlugin(
 
         if (
           absolutePath.includes(absoluteSlidesDir) &&
-          /\.(?:md|mdx)$/.test(absolutePath)
+          /\.(?:md|mdx|css)$/.test(absolutePath)
         ) {
           logger.info(`Slide file added: ${absolutePath}`);
           reloadModule();
@@ -468,7 +579,7 @@ export default async function slidesPlugin(
 
         if (
           absolutePath.includes(absoluteSlidesDir) &&
-          /\.(?:md|mdx)$/.test(absolutePath)
+          /\.(?:md|mdx|css)$/.test(absolutePath)
         ) {
           logger.info(`Slide file deleted: ${absolutePath}`);
           reloadModule();

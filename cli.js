@@ -2,16 +2,77 @@
 // @ts-check
 
 import { execSync } from "child_process";
-import { mkdir, mkdtemp, cp, rm } from "node:fs/promises";
+import { mkdir, mkdtemp, cp, rm, writeFile, access } from "node:fs/promises";
 import { resolve } from "node:path";
 import { parseArgs } from "node:util";
-import { build } from "vite";
+import { build, createServer } from "vite";
+
+async function ensureIndexHtml() {
+  const indexHtmlPath = resolve(process.cwd(), "index.html");
+  try {
+    await access(indexHtmlPath);
+    // index.html already exists
+    return;
+  } catch {
+    // index.html doesn't exist, create it
+    // Use relative paths that Vite can resolve during development
+    const indexHtmlContent = `<!doctype html>
+<html lang="ja">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Vertical Writing Slides</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP&family=Noto+Sans+Mono:wght@100..900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/src/index.css" />
+    <link rel="stylesheet" media="screen" href="/src/screen.css" />
+    <link rel="stylesheet" media="print" href="/src/print.css" />
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>`;
+
+    await writeFile(indexHtmlPath, indexHtmlContent);
+    console.log("Generated index.html for external project");
+  }
+}
 
 async function runDev() {
   try {
-    execSync("npx vite", { stdio: "inherit" });
+    const libPath = import.meta.dirname;
+    const projectPath = process.cwd();
+
+    const server = await createServer({
+      root: libPath, // Use library as root for assets
+      configFile: resolve(libPath, "vite.config.ts"),
+      server: {
+        fs: {
+          allow: [
+            // Allow serving files from the library directory
+            libPath,
+            // Allow serving files from the current working directory
+            projectPath,
+          ],
+        },
+      },
+    });
+
+    await server.listen();
+    server.printUrls();
+    console.log("Development server started. Press Ctrl+C to stop.");
+
+    // Keep the process running
+    process.on("SIGINT", async () => {
+      console.log("\nShutting down development server...");
+      await server.close();
+      process.exit(0);
+    });
   } catch (error) {
-    console.error("Error during build:", error);
+    console.error("Error during development server startup:", error);
     process.exit(1);
   }
 }

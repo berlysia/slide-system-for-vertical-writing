@@ -61,7 +61,7 @@ code {
     inline-size: 100%;
   }
 
-  .header-and-content > *:not(:first-child) {
+  .header-and-content > *:nth-child(2) {
     flex: 1;
     @container style(--slide-writing-mode: horizontal-tb) or style(--slide-writing-mode: unset) {
       min-block-size: 0;

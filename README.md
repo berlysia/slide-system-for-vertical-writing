@@ -112,6 +112,10 @@ Create a `scripts.json` file in your slide directory:
 
 For development documentation, see [DEVELOPMENT.md](DEVELOPMENT.md).
 
+## Example Usage
+
+For example slides and presentations, see [berlysia/slides-for-vertical-writing](https://github.com/berlysia/slides-for-vertical-writing) repository.
+
 ## Writing Modes
 
 The application supports both vertical and horizontal writing modes:

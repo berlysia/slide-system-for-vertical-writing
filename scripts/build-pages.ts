@@ -7,7 +7,7 @@ const defaultSlidesDir = resolve(import.meta.dirname, "..", "slides");
 const pagesDir = "pages";
 
 // Ensure pages directory exists
-await rm(pagesDir, { recursive: true });
+await rm(pagesDir, { recursive: true, force: true });
 await mkdir(pagesDir, { recursive: true });
 
 async function buildSlide(slideName: string) {

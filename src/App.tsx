@@ -114,18 +114,8 @@ function App() {
         gotoNextSlide(false);
       }
     };
-    const handleWheel = (event: WheelEvent) => {
-      if (event.deltaY > 0) {
-        gotoNextSlide();
-      } else if (event.deltaY < 0) {
-        gotoNextSlide(false);
-      }
-    };
     const controller = new AbortController();
     window.addEventListener("keydown", handleKeydown, {
-      signal: controller.signal,
-    });
-    window.addEventListener("wheel", handleWheel, {
       signal: controller.signal,
     });
     return () => {

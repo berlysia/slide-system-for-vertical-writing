@@ -1,7 +1,18 @@
 import { existsSync } from "fs";
-import { mkdir, readdir, stat, cp, writeFile, mkdtemp, rm } from "fs/promises";
+import {
+  mkdir,
+  readdir,
+  stat,
+  cp,
+  writeFile,
+  mkdtemp,
+  rm,
+  readFile,
+} from "fs/promises";
 import { join, resolve } from "path";
 import { build } from "vite";
+import matter from "gray-matter";
+import type { SlideMetadata } from "../src/types/slide-metadata";
 
 const defaultSlidesDir = resolve(import.meta.dirname, "..", "slides");
 const pagesDir = "pages";
@@ -27,9 +38,58 @@ async function buildSlide(slideName: string) {
   await rm(tmpDir, { recursive: true });
 }
 
-async function createIndexPage(slideNames: string[]) {
-  const slides = slideNames
-    .map((name) => `    <li><a href="${name}/">${name}</a></li>`)
+/**
+ * スライドコレクションからメタデータを取得
+ */
+async function getSlideMetadata(
+  slidesDir: string,
+  slideName: string,
+): Promise<SlideMetadata> {
+  const mdxPath = join(slidesDir, slideName, "index.mdx");
+  const mdPath = join(slidesDir, slideName, "index.md");
+
+  let filePath: string | undefined;
+
+  if (existsSync(mdxPath)) {
+    filePath = mdxPath;
+  } else if (existsSync(mdPath)) {
+    filePath = mdPath;
+  }
+
+  if (!filePath) {
+    return { title: slideName };
+  }
+
+  try {
+    const content = await readFile(filePath, "utf-8");
+    const parsed = matter(content);
+    return {
+      title: slideName,
+      ...parsed.data,
+    };
+  } catch (error) {
+    console.warn(`Failed to parse frontmatter for ${slideName}: ${error}`);
+    return { title: slideName };
+  }
+}
+
+async function createIndexPage(slideNames: string[], slidesDir: string) {
+  // 各スライドのメタデータを取得
+  const slideMetadataList = await Promise.all(
+    slideNames.map(async (name) => ({
+      name,
+      metadata: await getSlideMetadata(slidesDir, name),
+    })),
+  );
+
+  const slides = slideMetadataList
+    .map(({ name, metadata }) => {
+      const displayTitle = metadata.title || name;
+      const description = metadata.description
+        ? ` - ${metadata.description}`
+        : "";
+      return `    <li><a href="${name}/">${displayTitle}</a>${description}</li>`;
+    })
     .join("\n");
 
   const html = `<!DOCTYPE html>
@@ -70,7 +130,7 @@ export async function buildPages(options: { slidesDir?: string } = {}) {
   for (const slide of slides) {
     await buildSlide(slide);
   }
-  await createIndexPage(slides);
+  await createIndexPage(slides, resolvedSlidesDir);
 }
 
 // CLI entry point

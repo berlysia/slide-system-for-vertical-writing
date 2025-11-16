@@ -28,3 +28,4 @@ test-results
 playwright-report
 pages
 scripts/*.js
+src/types/*.js

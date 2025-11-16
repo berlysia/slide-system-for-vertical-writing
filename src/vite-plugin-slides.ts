@@ -1,4 +1,9 @@
-import type { Plugin, ViteDevServer, ResolvedConfig } from "vite";
+import type {
+  Plugin,
+  ViteDevServer,
+  ResolvedConfig,
+  HtmlTagDescriptor,
+} from "vite";
 import * as fs from "node:fs";
 import * as path from "node:path";
 import { mkdirSync, readdirSync } from "node:fs";
@@ -14,6 +19,8 @@ import { ScriptManager, type ParsedScript } from "./script-manager";
 import { visit } from "unist-util-visit";
 import type { Node } from "unist";
 import type { Element, Text, ElementContent } from "hast";
+import matter from "gray-matter";
+import type { SlideMetadata, ParsedSlideFile } from "./types/slide-metadata";
 
 /**
  * CSS抽出用のrehypeプラグイン
@@ -124,6 +131,37 @@ function loadAdjacentScripts(
   return result;
 }
 
+/**
+ * ファイル内容からfrontmatterをパースして、メタデータとコンテンツに分離
+ */
+function parseSlideFile(
+  content: string,
+  collectionName: string,
+): ParsedSlideFile {
+  try {
+    const parsed = matter(content);
+    const metadata: SlideMetadata = {
+      // デフォルトタイトルとしてコレクション名を使用
+      title: collectionName,
+      ...parsed.data,
+    };
+
+    return {
+      metadata,
+      content: parsed.content,
+      originalContent: content,
+    };
+  } catch (error) {
+    logger.warn(`Failed to parse frontmatter: ${error}`);
+    // パースに失敗した場合はfrontmatterなしとして扱う
+    return {
+      metadata: { title: collectionName },
+      content,
+      originalContent: content,
+    };
+  }
+}
+
 export interface SlidesPluginOptions {
   /** Directory containing the slides (absolute path) */
   slidesDir?: string;
@@ -231,6 +269,7 @@ export default async function slidesPlugin(
   let resolvedConfig: ResolvedConfig;
   let slideStyles: string[] = [];
   let slideScripts: ParsedScript = { external: [], inline: [] };
+  let slideMetadata: SlideMetadata = { title: config.collection };
   return {
     name: "vite-plugin-slides",
     configResolved(config: ResolvedConfig) {
@@ -288,6 +327,13 @@ export default async function slidesPlugin(
 
         const content = fs.readFileSync(filePath, "utf-8");
 
+        // frontmatterをパースしてメタデータとコンテンツを分離
+        const parsedFile = parseSlideFile(content, config.collection);
+        slideMetadata = parsedFile.metadata;
+        const slideContent = parsedFile.content;
+
+        logger.info(`Slide metadata: ${JSON.stringify(slideMetadata)}`);
+
         // 隣接CSSファイルを読み込み
         const adjacentStyles = loadAdjacentCSS(
           config.slidesDir,
@@ -306,7 +352,7 @@ export default async function slidesPlugin(
         };
 
         if (!isMdx) {
-          const slides = content.split(/^\s*(?:---|\*\*\*|___)\s*$/m);
+          const slides = slideContent.split(/^\s*(?:---|\*\*\*|___)\s*$/m);
           const extractedStyles: string[] = [];
           const extractedScripts: ParsedScript = { external: [], inline: [] };
           const processedSlides = await Promise.all(
@@ -349,29 +395,29 @@ export default async function slidesPlugin(
           `;
         }
 
-        const slides = content.split(/^\s*(?:---|\*\*\*|___)\s*$/m);
+        const slides = slideContent.split(/^\s*(?:---|\*\*\*|___)\s*$/m);
 
         // MDXにもCSS・スクリプト抽出を適用
         const extractedStyles: string[] = [];
         const extractedScripts: ParsedScript = { external: [], inline: [] };
         const processedSlides = await Promise.all(
-          slides.map(async (slideContent) => {
+          slides.map(async (slide) => {
             // MDX内のstyleタグを手動で抽出（簡易実装）
             const styleRegex = /<style[^>]*>([\s\S]*?)<\/style>/gi;
             let match;
-            while ((match = styleRegex.exec(slideContent)) !== null) {
+            while ((match = styleRegex.exec(slide)) !== null) {
               if (match[1].trim()) {
                 extractedStyles.push(match[1].trim());
               }
             }
 
             // MDX内のscriptタグを抽出
-            const parsedScripts = ScriptManager.parseScripts(slideContent);
+            const parsedScripts = ScriptManager.parseScripts(slide);
             extractedScripts.external.push(...parsedScripts.external);
             extractedScripts.inline.push(...parsedScripts.inline);
 
             // style・scriptタグを削除したコンテンツでMDXコンパイル
-            let cleanedContent = slideContent.replace(styleRegex, "");
+            let cleanedContent = slide.replace(styleRegex, "");
             cleanedContent =
               ScriptManager.removeScriptsFromContent(cleanedContent);
 
@@ -445,6 +491,9 @@ export default async function slidesPlugin(
 
             // スライド固有のスクリプトを外部から利用可能にする
             export const slideScripts = ${slideScriptsString};
+
+            // スライドのメタデータを外部から利用可能にする
+            export const slideMetadata = ${JSON.stringify(slideMetadata)};
 
             // provide slide components to each slide
             // Wrap SlideN components to provide SlideComponents
@@ -533,12 +582,15 @@ export default async function slidesPlugin(
       // Generate HTML file if none exists in consumer project
       const consumerIndexHtml = path.resolve(resolvedConfig.root, "index.html");
 
-      if (!fs.existsSync(consumerIndexHtml)) {
+      // CLIモードでは常にメタデータ付きHTMLを生成
+      const isExternalCLI = process.cwd() !== resolvedConfig.root;
+
+      if (!fs.existsSync(consumerIndexHtml) || isExternalCLI) {
         // Find the main JS and CSS files in the bundle
         const mainJsFile = Object.keys(bundle).find(
           (fileName) =>
             fileName.startsWith("assets/") &&
-            fileName.includes("main-") &&
+            (fileName.includes("index-") || fileName.includes("main-")) &&
             fileName.endsWith(".js"),
         );
         const mainCssFile = Object.keys(bundle).find(
@@ -548,6 +600,7 @@ export default async function slidesPlugin(
 
         if (!mainJsFile) {
           logger.error("Could not find main JS file in bundle");
+          logger.error("Available bundle files: " + Object.keys(bundle));
           return;
         }
 
@@ -555,12 +608,15 @@ export default async function slidesPlugin(
           ? `<link rel="stylesheet" href="./${mainCssFile}">`
           : "<!-- CSS is included in the JS bundle -->";
 
+        const pageTitle = slideMetadata?.title || "Vertical Writing Slides";
         const virtualIndexHtml = `<!doctype html>
 <html lang="ja">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Vertical Writing Slides</title>
+    <title>${pageTitle}</title>
+    ${slideMetadata?.description ? `<meta name="description" content="${slideMetadata.description}" />` : ""}
+    ${slideMetadata?.author ? `<meta name="author" content="${slideMetadata.author}" />` : ""}
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP&family=Noto+Sans+Mono:wght@100..900&display=swap" rel="stylesheet">
@@ -712,6 +768,39 @@ export default async function slidesPlugin(
       return () => {
         // No additional cleanup needed since we're using Vite's built-in watcher
       };
+    },
+
+    transformIndexHtml() {
+      // ビルド時に既存の index.html を変換してメタデータを挿入
+      const title = slideMetadata?.title || config.collection;
+      const tags: HtmlTagDescriptor[] = [
+        {
+          tag: "title",
+          children: title,
+        },
+      ];
+
+      if (slideMetadata?.description) {
+        tags.push({
+          tag: "meta",
+          attrs: {
+            name: "description",
+            content: slideMetadata.description,
+          },
+        });
+      }
+
+      if (slideMetadata?.author) {
+        tags.push({
+          tag: "meta",
+          attrs: {
+            name: "author",
+            content: slideMetadata.author,
+          },
+        });
+      }
+
+      return tags;
     },
   };
 }

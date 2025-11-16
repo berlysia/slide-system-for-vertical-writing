@@ -770,8 +770,11 @@ export default async function slidesPlugin(
       };
     },
 
-    transformIndexHtml() {
-      // ビルド時に既存の index.html を変換してメタデータを挿入
+    transformIndexHtml(html: string) {
+      // 既存の <title> タグを削除
+      const htmlWithoutTitle = html.replace(/<title>.*?<\/title>/i, "");
+
+      // メタデータタグを構築
       const title = slideMetadata?.title || config.collection;
       const tags: HtmlTagDescriptor[] = [
         {
@@ -800,7 +803,10 @@ export default async function slidesPlugin(
         });
       }
 
-      return tags;
+      return {
+        html: htmlWithoutTitle,
+        tags,
+      };
     },
   };
 }
